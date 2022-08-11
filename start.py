@@ -129,7 +129,6 @@ except:
     print("[FAIL] Servo at home")
     raspi_log.write("[FAIL] Servo at home\n")
 
-# Anotar hora de comienzo en el log
 print("Flags: ")
 print(flag_check1) 
 print(flag_pilot)
@@ -137,6 +136,7 @@ print(flag_armed)
 print(flag_wifi_off)
 print(flag_servo_home)
 
+# Write down the start datetime in the log file
 if flag_check1 and flag_pilot and flag_armed and flag_wifi_off and flag_servo_home:
     x = datetime.datetime.now()
     print("Start datetime " + x.strftime("%x %X"))
@@ -145,7 +145,8 @@ else:
     print("[FAIL] Start")
     raspi_log.write("[FAIL] Start\n")
 
-# Comenzar temporizador
-# (ver como se hace)
+# Start counter
+# ...
 
-# Despegar y ejecutar siguiente script: flying_modes.py
+# Take off and execute the next script: flying_modes.py
+# ...
