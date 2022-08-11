@@ -1,0 +1,7 @@
+*** LOGFILE RASPBERRY PI 4 - 08/11/22 11:40:46 ***
+[OK] Mode STABILIZE set
+[OK] Pilot confirm
+[FAIL] Armed
+[OK] Wi-Fi down
+[OK] Servo at home
+[FAIL] Start

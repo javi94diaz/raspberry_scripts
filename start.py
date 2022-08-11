@@ -10,6 +10,10 @@
 from dronekit import connect
 from pymavlink import mavutil
 import os
+import datetime
+
+x = datetime.datetime.now()
+print(x.strftime("%x %X"))
 
 # pymavlink connection
 master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
@@ -22,7 +26,8 @@ try:
 except:
     raspi_log = open("raspi_log.txt", "a")
 
-raspi_log.write("*** LOGFILE RASPBERRY PI 4 - DATETIME ***\n")
+curr_time = datetime.datetime.now()
+raspi_log.write("*** LOGFILE RASPBERRY PI 4 - " + curr_time.strftime("%x %X") + " ***\n")
 
 # Flags to raise in each check
 flag_check1 = False
@@ -33,29 +38,38 @@ flag_servo_home = False
 
 # Leer un valor (modo, por ejemplo), verificar que esta dentro del rango
 print("Checking mode...")
-#print(" Mode: %s" % vehicle.mode.name)    # settable
-#curr_mode = vehicle.mode.name
 
-curr_mode = "none"
+mode = "STABILIZE"
 
-if curr_mode == "STABILIZE":
-    # Si todo está bien, mensaje de ok
-    # y escribir en el fichero de logs la actividad hasta ahora
-    print("Check 1: Mode [OK]")
-    raspi_log.write("Check 1: Mode [OK]\n")
-    flag_check1 = True
+# Check if mode is available
+if mode not in master.mode_mapping():
+    print('Unknown mode : {}'.format(mode))
+    print('Try:', list(master.mode_mapping().keys()))
+    raspi_log.write("[FAIL] Mode not available\n")
 else:
-    print("Check 1: Mode [FAIL]")
-    raspi_log.write("Check 1: Mode [FAIL]\n")
+    
+    mode_id = master.mode_mapping()[mode]
 
-# Pedir por teclado el ok del piloto
-input("All checks passed, waiting for Pilot confirmation")
+    # Set new mode
+    master.mav.command_long_send(
+    master.target_system, 
+    master.target_component,
+    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
+    0, 
+    0, 
+    mode_id, 0, 0, 0, 0, 0)
+    
+    print("[OK] Mode " + str(mode) + "set")
+    raspi_log.write("[OK] Mode " + str(mode) + " set\n")
+    flag_check1 = True
 
-print("Pilot confirm [OK]")
-raspi_log.write("Pilot confirm [OK]\n")
+# Requesting the pilot for confirmation of the manual checks
+input("All checks passed, waiting for Pilot confirmation") # Press any key...
+print("[OK] Pilot confirm")
+raspi_log.write("[OK] Pilot confirm\n")
 flag_pilot = True
 
-# Armar el dron
+# Arm the aircraft
 print('Arming...')
 
 try:
@@ -66,58 +80,70 @@ try:
         0,
         1, 0, 0, 0, 0, 0, 0)
 
-    # wait until arming confirmed (can manually check with master.motors_armed())
+    # Wait until arming confirmed (can manually check with master.motors_armed())
     print("Waiting for the vehicle to arm")
     master.motors_armed_wait()
-    print('Armed [OK]')
-    raspi_log.write("Armed [OK]\n")
+    print('[OK] Armed')
+    raspi_log.write("[OK] Armed\n")
     flag_armed = True
 except:
-        print('Armed [FAIL]')
-        raspi_log.write('Armed [FAIL]\n')
+    print('[FAIL] Armed')
+    raspi_log.write('[FAIL] Armed\n')
 
-# Apagar el Wi-Fi
+# Turn Wi-Fi off
 print("Turning Wi-Fi off...")
 cmd = "sudo ifconfig wlan0 down"
 
 try:
     os.system(cmd)
-    print("Wi-Fi down [OK]")
-    raspi_log.write("Wi-Fi down [OK]\n")
+    print("[OK] Wi-Fi down")
+    raspi_log.write("[OK] Wi-Fi down\n")
     flag_wifi_off = True
 except:
-    print("Wi-Fi down [FAIL]")
-    raspi_log.write("Wi-Fi down [FAIL]\n")
+    print("[FAIL] Wi-Fi down")
+    raspi_log.write("[FAIL] Wi-Fi down\n")
 
-# Mover el servo a la posicion de reposo (listo para recibir orden) = MIN pwm value
+# Move servo to home position (ready to receive commands) = MIN pwm value
 print("Moving servo to home position...")
+servo_n = 10
+microseconds = 1100
 
 try:
-    msg = vehicle.message_factory.command_long_encode(
-        0, 0,    # target_system, target_component
-        mavutil.mavlink.MAV_CMD_DO_SET_SERVO, #command
-        0, #confirmation
-        10,    # servo number
-        1100,          # servo position between 1000 and 2000
-        0, 0, 0, 0, 0)    # param 3 ~ 7 not used
 
-    # send command to vehicle
-    vehicle.send_mavlink(msg)
+    # master.mav.command_long_send(
+    #     master.target_system, 
+    #     master.target_component,
+    #     mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
+    #     0,            # first transmission of this command
+    #     servo_n,  # servo instance
+    #     microseconds, # PWM pulse-width
+    #     0,0,0,0,0     # unused parameters
+    # )
 
-    print("Servo at home [OK]")
-    raspi_log.write("Servo at home [OK]\n")
+    master.set_servo(servo_n, microseconds)
+
+    print("[OK] Servo at home")
+    raspi_log.write("[OK] Servo at home\n")
     flag_servo_home = True
 except:
-    print("Servo at home [FAIL]")
-    raspi_log.write("Servo at home [FAIL]\n")
+    print("[FAIL] Servo at home")
+    raspi_log.write("[FAIL] Servo at home\n")
 
 # Anotar hora de comienzo en el log
+print("Flags: ")
+print(flag_check1) 
+print(flag_pilot)
+print(flag_armed)
+print(flag_wifi_off)
+print(flag_servo_home)
+
 if flag_check1 and flag_pilot and flag_armed and flag_wifi_off and flag_servo_home:
-    print("Start datetime [dd/mm/yyyy hh:mm:ss]")
-    raspi_log.write("Start datetime [dd/mm/yyyy hh:mm:ss]\n")
+    x = datetime.datetime.now()
+    print("Start datetime " + x.strftime("%x %X"))
+    raspi_log.write("Start datetime " + x.strftime("%x %X\n"))
 else:
-    print("Start [FAIL]")
-    raspi_log.write("Start [FAIL]\n")
+    print("[FAIL] Start")
+    raspi_log.write("[FAIL] Start\n")
 
 # Comenzar temporizador
 # (ver como se hace)
