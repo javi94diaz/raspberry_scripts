@@ -2,6 +2,7 @@
 import sys
 from pymavlink import mavutil
 
+print("Connecting")
 master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
 master.wait_heartbeat()
 

@@ -5,3 +5,17 @@
 [OK] Wi-Fi down
 [OK] Servo at home
 [FAIL] Start
+*** LOGFILE RASPBERRY PI 4 - 08/11/22 17:15:47 ***
+[OK] Mode STABILIZE set
+[OK] Pilot confirm
+[FAIL] Armed
+[OK] Wi-Fi down
+[OK] Servo at home
+[FAIL] Start
+*** LOGFILE RASPBERRY PI 4 - 08/11/22 17:19:13 ***
+[OK] Mode STABILIZE set
+[OK] Pilot confirm
+[OK] Armed
+[OK] Wi-Fi down
+[OK] Servo at home
+Start datetime 08/11/22 17:19:15

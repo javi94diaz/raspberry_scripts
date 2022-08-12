@@ -59,7 +59,7 @@ else:
     0, 
     mode_id, 0, 0, 0, 0, 0)
     
-    print("[OK] Mode " + str(mode) + "set")
+    print("[OK] Mode " + str(mode) + " set")
     raspi_log.write("[OK] Mode " + str(mode) + " set\n")
     flag_check1 = True
 
