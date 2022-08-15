@@ -1,9 +1,10 @@
-'''
+''' ******************************************************************
+
 JAVIKIT v1.0
 
 Python API for easy use of pymavlink methods from a companion computer
 
-'''
+****************************************************************** '''
 
 import os, sys, time, datetime, re
 from pymavlink import mavutil
@@ -52,11 +53,23 @@ def open_logfile(filename):
 
 # Connect to the autopilot
 def connect(connection_string='/dev/ttyAMA0', baudrate=921600):
-    master = mavutil.mavlink_connection(connection_string, baudrate)
-    master.wait_heartbeat()
-    print("Connected")
-    return master
-
+    '''
+    # Returns a mavutil connection object to handle all methods in the vehicle
+    # Example:
+        master = connect('/dev/ttyAMA0', 921600)
+    
+    # Output:
+        Waiting to connect...
+        [OK] Connected
+    '''
+    try:
+        master = mavutil.mavlink_connection(connection_string, baudrate)
+        print("Waiting to connect...")
+        master.wait_heartbeat()
+        print("[OK] Connected")
+        return master
+    except:
+        print("[FAIL] Connection not established")
 
 # Read current flight mode from heartbeat
 def get_mode():
@@ -72,6 +85,7 @@ def arm(master):
     '''
     # Arms the aircraft using the mavutil connection object
     # Example:
+        master = connect('/dev/ttyAMA0', 921600)
         arm(master)
 
     # Output:
@@ -100,6 +114,7 @@ def disarm(master):
     '''
     # Disarms the aircraft using the mavutil connection object
     # Example:
+        master = connect('/dev/ttyAMA0', 921600)
         disarm(master)
 
     # Output:
@@ -168,53 +183,64 @@ def handle_sys_status(msg):
 	sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
 	print ("")
 
+
 # Read all messages and filter them by type
 def read_messages(master):
-
+    '''
+    # Read all messages from mavlink stream
+    # Uses an especific handler method for each type of message
+    # Example:
+        master = connect('/dev/ttyAMA0', 921600)
+        read_messages(master)
+    '''
     # Request all data with certain frequency (4 in this case)
-	master.mav.request_data_stream_send(master.target_system, master.target_component, 
+    master.mav.request_data_stream_send(master.target_system, master.target_component, 
 		mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
 
-	while(True):
+    while(True):
 
 		# grab a mavlink message
-		msg = master.recv_match(blocking=False)
-		if not msg:
+        msg = master.recv_match(blocking=False)
+        if not msg:
 			#return
-			print("No message")
-		else:
+            print("No message")
+        else:
 			#pprint.pprint(msg.to_dict())
 			#print(msg.to_dict().keys())
 
 			# handle the message based on its type
-			msg_type = msg.get_type()
-			print("Message " + msg_type)
-			
-			if msg_type == "BAD_DATA":
-				if mavutil.all_printable(msg.data):
-					sys.stdout.write(msg.data)
-					sys.stdout.flush()
-			elif msg_type == "RC_CHANNELS": 
-				handle_rc_channels(msg)
-			elif msg_type == "HEARTBEAT":
-				handle_heartbeat(msg)
-			elif msg_type == "VFR_HUD":
-				handle_hud(msg)
-			elif msg_type == "ATTITUDE":
-				handle_attitude(msg)
-			elif msg_type == "SYS_STATUS":
-				handle_sys_status(msg)
+            msg_type = msg.get_type()
+            print("Message " + msg_type)
 
-			print("\n*****************")
-		time.sleep(0.1)
+            if msg_type == "BAD_DATA":
+                if mavutil.all_printable(msg.data):
+                    sys.stdout.write(msg.data)
+                    sys.stdout.flush()
+            elif msg_type == "RC_CHANNELS": 
+                handle_rc_channels(msg)
+            elif msg_type == "HEARTBEAT":
+                handle_heartbeat(msg)
+            elif msg_type == "VFR_HUD":
+                handle_hud(msg)
+            elif msg_type == "ATTITUDE":
+                handle_attitude(msg)
+            elif msg_type == "SYS_STATUS":
+                handle_sys_status(msg)
+
+            print("\n*****************")
+        time.sleep(0.1)
 
 
 def set_wifi(command):
     '''
     # Turns ON/OFF the Wi-Fi network in a Linux companion computer
+    # command argument must be "up" or "down" to execute a valid console command
+    # Example:
+        set_wifi("up")
 
-    command must be "up" or "down" to execute a valid console command
-    '''
+    # Output:
+        [OK] Wi-Fi turned up
+        '''
 
     if command == "up" or command == "down":
         cmd = "sudo ifconfig wlan0 " + command
