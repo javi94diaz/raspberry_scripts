@@ -5,41 +5,41 @@ API for easy use of pymavlink methods from a companion computer
 
 '''
 
-import sys, time, datetime, re
+import os, sys, time, datetime, re
 from pymavlink import mavutil
 
 
-# Show a countdown of some seconds onscreen
-'''
-#Example
-countdown(3):
-
-#Output
-Count 1
-Count 2
-Count 3
-
-'''
 def countdown(secs):
+    '''
+    # Show a countdown of some seconds onscreen
+    # Example
+        countdown(3)
+
+    # Output
+        Count 1
+        Count 2
+        Count 3
+
+    '''
     print("Counting %s seconds" %secs)
     for i in range (1, secs+1):
         print("Count " + str(i))
         time.sleep(1)
 
 
-# Open a new log file to keep track of activity
-''' 
-#Example:
-open_logfile("my_log")
-log_file.write("This will be written in the log file\n")
-
-#Output (in "mylog.txt"):
-
-*** LOGFILE: mylog.txt - 08/15/22 10:31:59 ***
-This will be written in the log file
-
-'''
 def open_logfile(filename):
+    ''' 
+    # Open a new log file to keep track of activity
+    # Example:
+        open_logfile("my_log")
+        log_file.write("This will be written in the log file\n")
+
+    # Output (in "mylog.txt"):
+        *** LOGFILE: mylog.txt - 08/15/22 10:31:59 ***
+        This will be written in the log file
+
+    '''
+
     file_name = filename + ".txt"
     try:
         log_file = open(file_name, "x")
@@ -68,13 +68,60 @@ def set_mode():
     pass
 
 
-# Arm the aircraft:
-def arm():
-    pass
+def arm(master):
+    '''
+    # Arms the aircraft using the mavutil connection object
+    # Example:
+        arm(master)
 
-# Disarm the aircraft:
-def disarm():
-    pass
+    # Output:
+        Waiting for the vehicle to arm...
+        [OK] Armed succesfully
+
+    '''
+    try:
+        master.mav.command_long_send(
+            master.target_system,
+            master.target_component,
+            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,
+            1, 0, 0, 0, 0, 0, 0)
+
+        print("Waiting for the vehicle to arm...")
+        master.motors_armed_wait()
+
+        if master.motors_armed():
+            print('[OK] Armed succesfully')
+    except:
+        print('[FAIL] Arming failed')
+
+
+def disarm(master):
+    '''
+    # Disarms the aircraft using the mavutil connection object
+    # Example:
+        disarm(master)
+
+    # Output:
+        Waiting for the vehicle to disarm...
+        [OK] Disarmed succesfully
+    '''
+    try:
+        master.mav.command_long_send(
+            master.target_system,
+            master.target_component,
+            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+            0,
+            0, 0, 0, 0, 0, 0, 0)
+
+        print("Waiting for the vehicle to disarm...")
+        master.motors_disarmed_wait()
+
+        if not master.motors_armed():
+            print('[OK] Disarmed succesfully')
+    except:
+        print('[FAIL] Arming failed')
+
 
 # Methods to handle different types of messages
 def handle_heartbeat(msg):
@@ -162,8 +209,23 @@ def read_messages(master):
 		time.sleep(0.1)
 
 
-# Turn companion computer Wi-Fi on
+def set_wifi(command):
+    '''
+    # Turns ON/OFF the Wi-Fi network in a Linux companion computer
 
-# Turn companion computer Wi-Fi off
+    command must be "up" or "down" to execute a valid console command
+    '''
+
+    if command == "up" or command == "down":
+        cmd = "sudo ifconfig wlan0 " + command
+
+        try:
+            os.system(cmd)
+            print("[OK] Wi-Fi turned " + command)
+        except:
+            print("[FAIL] Wi-Fi not set")
+    else:
+        print("Command not valid (must be 'up' or 'down')")
+
 
 # Move a servo
