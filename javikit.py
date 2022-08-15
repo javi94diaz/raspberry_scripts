@@ -1,12 +1,82 @@
-#!/usr/bin/env python
+'''
+JAVIKIT v1.0
 
-import sys, os, time, pprint, re
-from optparse import OptionParser
+API for easy use of pymavlink methods from a companion computer
 
-# tell python where to find mavlink so we can import it
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../mavlink'))
+'''
+
+import sys, time, datetime, re
 from pymavlink import mavutil
 
+
+# Show a countdown of some seconds onscreen
+'''
+#Example
+countdown(3):
+
+#Output
+Count 1
+Count 2
+Count 3
+
+'''
+def countdown(secs):
+    print("Counting %s seconds" %secs)
+    for i in range (1, secs+1):
+        print("Count " + str(i))
+        time.sleep(1)
+
+
+# Open a new log file to keep track of activity
+''' 
+#Example:
+open_logfile("my_log")
+log_file.write("This will be written in the log file\n")
+
+#Output (in "mylog.txt"):
+
+*** LOGFILE: mylog.txt - 08/15/22 10:31:59 ***
+This will be written in the log file
+
+'''
+def open_logfile(filename):
+    file_name = filename + ".txt"
+    try:
+        log_file = open(file_name, "x")
+    except:
+        log_file = open(file_name, "a")
+
+    curr_time = datetime.datetime.now()
+    log_file.write("*** LOGFILE: " + file_name + " - " + curr_time.strftime("%x %X") + " ***\n")
+
+
+# Connect to the autopilot
+def connect(connection_string='/dev/ttyAMA0', baudrate=921600):
+    master = mavutil.mavlink_connection(connection_string, baudrate)
+    master.wait_heartbeat()
+    print("Connected")
+    return master
+
+
+# Read current flight mode from heartbeat
+def get_mode():
+    pass
+
+
+# Set a new flight mode
+def set_mode():
+    pass
+
+
+# Arm the aircraft:
+def arm():
+    pass
+
+# Disarm the aircraft:
+def disarm():
+    pass
+
+# Methods to handle different types of messages
 def handle_heartbeat(msg):
 	mode = mavutil.mode_string_v10(msg)
 	is_armed = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
@@ -51,12 +121,17 @@ def handle_sys_status(msg):
 	sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
 	print ("")
 
-def read_loop(m):
+# Read all messages and filter them by type
+def read_messages(master):
+
+    # Request all data with certain frequency (4 in this case)
+	master.mav.request_data_stream_send(master.target_system, master.target_component, 
+		mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
 
 	while(True):
 
 		# grab a mavlink message
-		msg = m.recv_match(blocking=False)
+		msg = master.recv_match(blocking=False)
 		if not msg:
 			#return
 			print("No message")
@@ -86,42 +161,9 @@ def read_loop(m):
 			print("\n*****************")
 		time.sleep(0.1)
 
-def main():
-	'''
-	# read command line options
-	parser = OptionParser("readdata.py [options]")
-	parser.add_option("--baudrate", dest="baudrate", type='int',
-					  help="master port baud rate", default=115200)
-	parser.add_option("--device", dest="device", default=None, help="serial device")
-	parser.add_option("--rate", dest="rate", default=4, type='int', help="requested stream rate")
-	parser.add_option("--source-system", dest='SOURCE_SYSTEM', type='int',
-					  default=255, help='MAVLink source system for this GCS')
-	parser.add_option("--showmessages", dest="showmessages", action='store_true',
-					  help="show incoming messages", default=False)
-	(opts, args) = parser.parse_args()
-	
-	if opts.device is None:
-		print("You must specify a serial device")
-		sys.exit(1)
-	'''
 
-	# create a mavlink serial instance
-	#master = mavutil.mavlink_connection(opts.device, baud=opts.baudrate)
-	master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
+# Turn companion computer Wi-Fi on
 
-	# wait for the heartbeat msg to find the system ID
-	master.wait_heartbeat()
-	print("Connected")
+# Turn companion computer Wi-Fi off
 
-	# request data to be sent at the given rate
-	master.mav.request_data_stream_send(master.target_system, master.target_component, 
-		mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
-	
-	'''en lugar del 4 estaba esto: opts.rate'''
-
-	# enter the data loop
-	read_loop(master)
-
-
-if __name__ == '__main__':
-	main()
+# Move a servo

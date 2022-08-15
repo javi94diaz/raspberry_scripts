@@ -12,6 +12,12 @@ from pymavlink import mavutil
 import os
 import datetime
 
+def request_msg():
+    pass
+
+
+
+
 x = datetime.datetime.now()
 print(x.strftime("%x %X"))
 
@@ -19,6 +25,15 @@ print(x.strftime("%x %X"))
 master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
 print("Connected to mavlink")
 master.wait_heartbeat()
+
+
+
+# # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
+# master.mav.heartbeat_send(
+#     mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+#     mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+
+
 
 # Open the log file for the raspberry
 try:
@@ -39,7 +54,7 @@ flag_servo_home = False
 # Leer un valor (modo, por ejemplo), verificar que esta dentro del rango
 print("Checking mode...")
 
-mode = "STABILIZE"
+mode = "AUTO"
 
 # Check if mode is available
 if mode not in master.mode_mapping():
@@ -56,8 +71,12 @@ else:
     master.target_component,
     mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
     0, 
-    0, 
-    mode_id, 0, 0, 0, 0, 0)
+    1, 
+    10, # 10 = AUTO
+    0, 0, 0, 0, 0)
+
+    #master.set_mode_send(mode_id)
+    
     
     print("[OK] Mode " + str(mode) + " set")
     raspi_log.write("[OK] Mode " + str(mode) + " set\n")
@@ -144,9 +163,6 @@ if flag_check1 and flag_pilot and flag_armed and flag_wifi_off and flag_servo_ho
 else:
     print("[FAIL] Start")
     raspi_log.write("[FAIL] Start\n")
-
-# Start counter
-# ...
 
 # Take off and execute the next script: flying_modes.py
 # ...

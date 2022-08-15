@@ -1,13 +1,20 @@
 import pprint
 import time
 from pymavlink import mavutil
-import sys
+
+def countdown(secs):
+    print("Counting %s seconds" %secs)
+    for i in range (1, secs+1):
+        print("Count " + str(i))
+        time.sleep(1)
+
 
 print("Start")
 m = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
 print("Connected")
 
-time.sleep(1)
+# Wait some seconds
+countdown(3)
 
 try:
     print("a")
@@ -19,9 +26,9 @@ except Exception as ex:
 
 
 # Get information
-for i in range(0, 5):
+for i in range(0, 30):
     try:
-        msg = m.recv_match(blocking=False).to_dict()
+        msg = m.recv_match(blocking=True).to_dict()
         pprint.pprint(msg)
         print("*************************************************")
     except Exception as e:
