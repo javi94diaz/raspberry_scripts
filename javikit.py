@@ -1,7 +1,7 @@
 '''
 JAVIKIT v1.0
 
-API for easy use of pymavlink methods from a companion computer
+Python API for easy use of pymavlink methods from a companion computer
 
 '''
 
@@ -229,3 +229,4 @@ def set_wifi(command):
 
 
 # Move a servo
+#...
