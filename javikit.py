@@ -256,3 +256,9 @@ def set_wifi(command):
 
 # Move a servo
 #...
+
+
+# Get current date and time
+def print_datetime():
+    x = datetime.datetime.now()
+    print(x.strftime("%x %X"))
