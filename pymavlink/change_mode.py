@@ -3,54 +3,7 @@ import time
 from pymavlink import mavutil
 import pprint
 
-def countdown(secs):
-    print("Counting %s seconds" %secs)
-    for i in range (1, secs+1):
-        print("Count " + str(i))
-        time.sleep(1)
 
-# Connection with the autopilot
-master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
-master.wait_heartbeat()
-
-# # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
-# master.mav.heartbeat_send(
-#     mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
-#     mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
-
-#countdown(5)
-
-# Ver el modo actual
-print("Current mode directamente:")
-print(master.flightmode)
-
-
-print("Current mode con heartbeat:")
-for i in range(0, 2):
-    try:
-        msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
-        pprint.pprint(msg['base_mode'])
-        pprint.pprint(msg['custom_mode'])
-        print("*************************************************")
-    except Exception as e:
-        print(e)
-
-    time.sleep(0.1)
-
-
-
-# Choose a mode
-#mode = 'LOITER'
-mode = input("Introduce the new mode: ")
-
-# Check if mode is available
-if mode not in master.mode_mapping():
-    print('Unknown mode : {}'.format(mode))
-    print('Try:', list(master.mode_mapping().keys()))
-    sys.exit(1)
-
-
-# Imprimimos la tabla hash de modos y su numero asociado
 modelist = [
     'STABILIZE', 
     'ACRO', 
@@ -78,8 +31,66 @@ modelist = [
     'ZIGZAG', 
     'SYSTEMID', 
     'AUTOROTATE', 
-    'AUTO_RTL']
+    'AUTO_RTL'
+    ]
 
+
+def countdown(secs):
+    print("Counting %s seconds" %secs)
+    for i in range (1, secs+1):
+        print("Count " + str(i))
+        time.sleep(1)
+
+
+def get_mode(master):
+    # Ver el modo actual
+    print("Current mode directamente:")
+    print(master.flightmode)
+
+    print("Current mode con heartbeat:")
+    mode_num = 0
+    for i in range(0, 2):
+        try:
+            msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
+            pprint.pprint(msg['base_mode'])
+            pprint.pprint(msg['custom_mode'])
+            if msg['custom_mode'] > mode_num:
+                mode_num = msg['custom_mode']
+            print("*************************************************")
+        except Exception as e:
+            print(e)
+        time.sleep(0.1)
+
+    mode =  modelist[mode_num]
+    print("Current mode: " + mode)
+    return mode
+
+
+# Connection with the autopilot
+master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
+master.wait_heartbeat()
+
+# # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
+# master.mav.heartbeat_send(
+#     mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+#     mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+
+#countdown(5)
+
+get_mode(master)
+
+# Choose a mode
+mode = input("Introduce the new mode: ")
+mode = mode.upper()
+
+# Check if mode is available
+if mode not in master.mode_mapping():
+    print('Unknown mode : {}'.format(mode))
+    print('Try:', list(master.mode_mapping().keys()))
+    sys.exit(1)
+
+
+# Imprimimos la tabla hash de modos y su numero asociado
 print("HASH TABLE - mode_mapping")
 for i in modelist:
     mode_num = master.mode_mapping()[i]
@@ -90,15 +101,18 @@ mode_id = master.mode_mapping()[mode]
 print("Mode id: " + str(mode_id))
 
 # Set new mode
+'''
+# ESTE FUNCIONA COJONUDO
 master.mav.command_long_send(
    master.target_system, master.target_component,
    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
    0,
    1, 
    mode_id, 0, 0, 0, 0, 0)
+'''
 
 # Probar este
-# master.set_mode(mode_id)
+master.set_mode(mode_id)
 
 # ESTE FUNCIONA BIEN CREO
 # master.mav.set_mode_send(
@@ -126,8 +140,9 @@ while True:
     break
 
 
+get_mode(master)
 
-
+'''
 # Chequear el nuevo modo directamente
 print("Mode changed to:")
 print(master.flightmode)
@@ -139,8 +154,10 @@ for i in range(0, 2):
         msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
         pprint.pprint(msg['base_mode'])
         pprint.pprint(msg['custom_mode'])
+        print("Current mode: " + modelist[msg['custom_mode']])
         print("*************************************************")
     except Exception as e:
         print(e)
 
     time.sleep(0.1)
+'''

@@ -14,25 +14,13 @@ import datetime
 
 def request_msg():
     pass
+    # command_long MAV_DO_REQUEST_MSG o algoa asi
 
-
-
-
-x = datetime.datetime.now()
-print(x.strftime("%x %X"))
 
 # pymavlink connection
 master = mavutil.mavlink_connection('/dev/ttyAMA0', 921600)
 print("Connected to mavlink")
 master.wait_heartbeat()
-
-
-
-# # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
-# master.mav.heartbeat_send(
-#     mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
-#     mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
-
 
 
 # Open the log file for the raspberry

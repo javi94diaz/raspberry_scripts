@@ -4,13 +4,66 @@ JAVIKIT v1.0
 
 Python API for easy use of pymavlink methods from a companion computer
 
+List of contents:
+    modelist[]
+    countdown()
+    open_logfile()
+    connect()
+    get_mode()
+    set_mode()
+    arm()
+    disarm()
+    handle_heartbeat()
+    handle_rc_channels()
+    handle_hud()
+    handle_attitude()
+    handle_sys_status()
+    read_messages()
+    set_wifi()
+    move_servo()
+    get_datetime()
+    request_msg()
+
+
 ****************************************************************** '''
 
-import os, sys, time, datetime, re
+import os, sys, time, datetime, re, pprint
 from pymavlink import mavutil
 
+# Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
 
-def countdown(secs):
+modelist = [
+    'STABILIZE', 
+    'ACRO', 
+    'ALT_HOLD', 
+    'AUTO', 
+    'GUIDED', 
+    'LOITER', 
+    'RTL', 
+    'CIRCLE', 
+    'POSITION', 
+    'LAND', 
+    'OF_LOITER', 
+    'DRIFT', 
+    'SPORT', 
+    'FLIP', 
+    'AUTOTUNE', 
+    'POSHOLD', 
+    'BRAKE', 
+    'THROW', 
+    'AVOID_ADSB', 
+    'GUIDED_NOGPS', 
+    'SMART_RTL', 
+    'FLOWHOLD', 
+    'FOLLOW', 
+    'ZIGZAG', 
+    'SYSTEMID', 
+    'AUTOROTATE', 
+    'AUTO_RTL'
+    ]
+
+
+def countdown(seconds):
     '''
     # Show a countdown of some seconds onscreen
     # Example
@@ -22,8 +75,8 @@ def countdown(secs):
         Count 3
 
     '''
-    print("Counting %s seconds" %secs)
-    for i in range (1, secs+1):
+    print("Counting {} seconds".format(seconds))
+    for i in range (1, seconds+1):
         print("Count " + str(i))
         time.sleep(1)
 
@@ -32,8 +85,8 @@ def open_logfile(filename):
     ''' 
     # Open a new log file to keep track of activity
     # Example:
-        open_logfile("my_log")
-        log_file.write("This will be written in the log file\n")
+        my_log = open_logfile("my_log")
+        my_log.write("This will be written in the log file\n")
 
     # Output (in "mylog.txt"):
         *** LOGFILE: mylog.txt - 08/15/22 10:31:59 ***
@@ -48,12 +101,13 @@ def open_logfile(filename):
         log_file = open(file_name, "a")
 
     curr_time = datetime.datetime.now()
-    log_file.write("*** LOGFILE: " + file_name + " - " + curr_time.strftime("%x %X") + " ***\n")
+    log_file.write("\n*** LOGFILE: " + file_name + " - " + curr_time.strftime("%x %X") + " ***\n")
 
+    return log_file
 
-# Connect to the autopilot
 def connect(connection_string='/dev/ttyAMA0', baudrate=921600):
     '''
+    # Connect to the autopilot
     # Returns a mavutil connection object to handle all methods in the vehicle
     # Example:
         master = connect('/dev/ttyAMA0', 921600)
@@ -71,14 +125,97 @@ def connect(connection_string='/dev/ttyAMA0', baudrate=921600):
     except:
         print("[FAIL] Connection not established")
 
-# Read current flight mode from heartbeat
-def get_mode():
-    pass
 
+def get_mode(master):
+    '''
+    # Read current flight mode
+    # There are two ways, the attribute "flightmode", or using the 
+    # heartbeat message to infer the current mode.
+    # Example:
+        get_mode(master)
 
-# Set a new flight mode
-def set_mode():
-    pass
+    # Output:
+        Current mode: 'STABILIZE'
+    '''
+
+    #print("Current mode directamente:")
+    #print(master.flightmode)
+
+    #print("Current mode con heartbeat:")
+    mode_num = 0
+    for i in range(0, 2):
+        try:
+            msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
+            #pprint.pprint(msg['base_mode'])
+            #pprint.pprint(msg['custom_mode'])
+            if msg['custom_mode'] > mode_num:
+                mode_num = msg['custom_mode']
+            #print("*************************************************")
+        except Exception as e:
+            print(e)
+        time.sleep(0.1)
+
+    mode =  modelist[mode_num]
+    #print("Current mode: " + mode)
+    return mode
+
+def set_mode(master, mode):
+    '''
+    # Set a new mode to the aircraft
+    # First, it checks the current mode and then tries to change it
+    # Example:
+        set_mode(master, 'LOITER')
+    
+    # Output:
+        Mode changed to 'LOITER'
+        (check the GCS to see if it's actually changed)
+    '''
+
+    print("Current mode: " + get_mode(master))
+
+    mode = mode.upper()
+    
+    # Check if mode is available
+    if mode not in master.mode_mapping():
+        print('Unknown mode : {}'.format(mode))
+        print('Try:', list(master.mode_mapping().keys()))
+        sys.exit(1)
+
+    # Imprimimos la tabla hash de modos y su numero asociado
+    # print("HASH TABLE - mode_mapping")
+    # for i in modelist:
+    #     mode_num = master.mode_mapping()[i]
+    #     print(i + ": " +  str(mode_num))
+
+    # Get mode ID
+    mode_id = master.mode_mapping()[mode]
+    #print("Mode id: " + str(mode_id))
+
+    # Set new mode
+    master.mav.command_long_send(
+    master.target_system, master.target_component,
+    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
+    0,
+    1, 
+    mode_id, 0, 0, 0, 0, 0)
+
+    while True:
+        # Wait for ACK command
+        # Would be good to add mechanism to avoid endlessly blocking
+        # if the autopilot sends a NACK or never receives the message
+        ack_msg = master.recv_match(type='COMMAND_ACK', blocking=True)
+        ack_msg = ack_msg.to_dict()
+        #print (ack_msg)
+
+        # Continue waiting if the acknowledged command is not `set_mode`
+        if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+            continue
+
+        # Print the ACK result !
+        print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
+        break
+
+    print("New mode: " + get_mode(master))
 
 
 def arm(master):
@@ -183,6 +320,20 @@ def handle_sys_status(msg):
 	sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
 	print ("")
 
+def request_msg(master, freq=4):
+    '''
+    # Request all types of messages with certain frequency (4 in this case)
+    # Example:
+
+    '''
+
+    # Poner la alternativa con command_long MAV_DO_REQUEST_MSG o similar
+
+    master.mav.request_data_stream_send(
+        master.target_system, 
+        master.target_component, 
+		mavutil.mavlink.MAV_DATA_STREAM_ALL, 
+        freq, 1)
 
 # Read all messages and filter them by type
 def read_messages(master):
@@ -193,9 +344,8 @@ def read_messages(master):
         master = connect('/dev/ttyAMA0', 921600)
         read_messages(master)
     '''
-    # Request all data with certain frequency (4 in this case)
-    master.mav.request_data_stream_send(master.target_system, master.target_component, 
-		mavutil.mavlink.MAV_DATA_STREAM_ALL, 4, 1)
+    # Request all types of messages to the stream
+    request_msg(master, 4)
 
     while(True):
 
@@ -254,11 +404,61 @@ def set_wifi(command):
         print("Command not valid (must be 'up' or 'down')")
 
 
-# Move a servo
-#...
+# Move servo to home position (ready to receive commands) = MIN pwm value
+def move_servo(master, servo_n=10, microsec=1100):
+    '''
+    # Moves the desired servomotor servo_n to a position determined
+    # by the microseconds given for the PWM.
+    # The default MIN position is 1100 microseconds
+    # The default TRIM position is 1500 microseconds
+    # The default MAX position is 1900 microseconds
+    # Example:
+        master = connect('/dev/ttyAMA0', 921600)
+        move_servo(master, 10, 1100) # Moves servo number 10 to MIN position
+    '''
+
+    try:
+
+        # master.mav.command_long_send(
+        #     master.target_system, 
+        #     master.target_component,
+        #     mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
+        #     0,            # first transmission of this command
+        #     servo_n,  # servo instance
+        #     microseconds, # PWM pulse-width
+        #     0,0,0,0,0     # unused parameters
+        # )
+
+        master.set_servo(servo_n, microsec)
+        
+        print("[OK] Servo "  + str(servo_n) + " moved to " + str(microsec))
+    except:
+        print("[FAIL] Servo at home")
 
 
 # Get current date and time
-def print_datetime():
+def get_datetime():
     x = datetime.datetime.now()
-    print(x.strftime("%x %X"))
+    return x.strftime("%x %X")
+
+
+# # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
+# master.mav.heartbeat_send(
+#     mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+#     mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+
+
+
+def main():
+    print(get_datetime())
+    master = connect('/dev/ttyAMA0', 921600)
+    javilog = open_logfile("javilog")
+    javilog.write("javikit 1")
+    #read_messages(master)
+    print("Initial mode: " + get_mode(master))
+    set_mode(master, 'LOITER')
+    move_servo(master, 10, 1100)
+
+
+if __name__ == '__main__':
+	main()
