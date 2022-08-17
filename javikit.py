@@ -1,66 +1,47 @@
 ''' ******************************************************************
 
 JAVIKIT v1.0
-
 Python API for easy use of pymavlink methods from a companion computer
 
-List of contents:
-    modelist[]
+List of methods and classes:
     countdown()
-    open_logfile()
-    connect()
-    get_mode()
-    set_mode()
-    arm()
-    disarm()
-    handle_heartbeat()
-    handle_rc_channels()
-    handle_hud()
-    handle_attitude()
-    handle_sys_status()
-    read_messages()
-    set_wifi()
-    move_servo()
     get_datetime()
-    request_msg()
+
+    class Vehicle:
+        modelist[]
+
+        connect()
+        get_mode()
+        set_mode()
+        arm()
+        disarm()
+        handle_heartbeat()
+        handle_rc_channels()
+        handle_hud()
+        handle_attitude()
+        handle_sys_status()
+        request_msg()
+        read_messages()
+        move_servo()
+    
+    class CompanionComputer:
+        open_logfile()
+        set_wifi()
+
 
 
 ****************************************************************** '''
 
 import os, sys, time, datetime, re, pprint
 from pymavlink import mavutil
+from urllib.request import urlopen, URLError
+import contextlib
+
 
 # Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
-
-modelist = [
-    'STABILIZE', 
-    'ACRO', 
-    'ALT_HOLD', 
-    'AUTO', 
-    'GUIDED', 
-    'LOITER', 
-    'RTL', 
-    'CIRCLE', 
-    'POSITION', 
-    'LAND', 
-    'OF_LOITER', 
-    'DRIFT', 
-    'SPORT', 
-    'FLIP', 
-    'AUTOTUNE', 
-    'POSHOLD', 
-    'BRAKE', 
-    'THROW', 
-    'AVOID_ADSB', 
-    'GUIDED_NOGPS', 
-    'SMART_RTL', 
-    'FLOWHOLD', 
-    'FOLLOW', 
-    'ZIGZAG', 
-    'SYSTEMID', 
-    'AUTOROTATE', 
-    'AUTO_RTL'
-    ]
+# Cambiar las descripciones y los ejemplos de uso de los metodos
+# Buscar javascript drag and drop box for a file, to upload it in the web to the raspi
+# Hacer un metodo que imprima tanto por consola como en el logfile, que sino es un coñazo poner el print y el logfile.write todo el rato
 
 
 def countdown(seconds):
@@ -81,6 +62,212 @@ def countdown(seconds):
         time.sleep(1)
 
 
+def get_datetime():
+    '''
+    # Returns an string with current date and time
+    # using dd/mm/yy hh:mm:ss format
+    # Example:
+        print(get_datetime())
+    
+    # Output
+        08/17/22 09:47:16
+
+    '''
+    x = datetime.datetime.now()
+    return x.strftime("%d/%m/%y %X") # don't know why some of them are orange
+
+
+modelist = [
+    'STABILIZE', 'ACRO', 'ALT_HOLD', 'AUTO', 
+    'GUIDED', 'LOITER', 'RTL', 'CIRCLE', 
+    'POSITION', 'LAND', 'OF_LOITER', 'DRIFT', 
+    'SPORT', 'FLIP', 'AUTOTUNE', 'POSHOLD', 
+    'BRAKE', 'THROW', 'AVOID_ADSB', 'GUIDED_NOGPS', 
+    'SMART_RTL', 'FLOWHOLD', 'FOLLOW', 'ZIGZAG', 
+    'SYSTEMID', 'AUTOROTATE', 'AUTO_RTL'
+    ]
+    
+
+class Vehicle:
+
+    # modelist = [...]
+    
+    def __init__(self):
+        self.mode = "default"
+        #self.master = None
+        pass
+
+
+    def connect(self, connection_string='/dev/ttyAMA0', baudrate=921600):
+        '''
+        # Connect to the autopilot
+        # Returns a mavutil connection object to handle all methods in the vehicle
+        # Example:
+            master = connect('/dev/ttyAMA0', 921600)
+        
+        # Output:
+            Waiting to connect...
+            [OK] Connected
+        '''
+        try:
+            master = mavutil.mavlink_connection(connection_string, baudrate)
+            print("Waiting to connect...")
+            master.wait_heartbeat()
+            print("[OK] Connected")
+            return master
+        except:
+            print("[ERROR] Connection not established")
+            # Anadir un return o algo para que la variable no quede vacia
+
+
+    def get_mode(self, master):
+        '''
+        # Read current flight mode
+        # There are two ways, the attribute "flightmode", or using the 
+        # heartbeat message to infer the current mode.
+        # Example:
+            get_mode(master)
+
+        # Output:
+            Current mode: 'STABILIZE'
+        '''
+
+        mode_num = 0
+        for i in range(0, 2):
+            try:
+                msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
+                #pprint.pprint(msg['base_mode'])
+                #pprint.pprint(msg['custom_mode'])
+                if msg['custom_mode'] > mode_num:
+                    mode_num = msg['custom_mode']
+                #print("*************************************************")
+            except Exception as e:
+                print(e)
+            time.sleep(0.1)
+
+        self.mode =  modelist[mode_num]
+        #print("Current mode: " + mode)
+        return self.mode
+
+
+    def set_mode(self, master, mode):
+        '''
+        # Set a new mode to the aircraft
+        # First, it checks the current mode and then tries to change it
+        # Example:
+            set_mode(master, 'LOITER')
+        
+        # Output:
+            Mode changed to 'LOITER'
+            (check the GCS to see if it's actually changed)
+        '''
+
+        print("Current mode: " + self.get_mode(master))
+
+        mode = mode.upper()
+        
+        # Check if mode is available
+        if mode not in master.mode_mapping():
+            print('Unknown mode : {}'.format(mode))
+            print('Try:', list(master.mode_mapping().keys()))
+            sys.exit(1)
+
+        # Imprimimos la tabla hash de modos y su numero asociado
+        # print("HASH TABLE - mode_mapping")
+        # for i in modelist:
+        #     mode_num = master.mode_mapping()[i]
+        #     print(i + ": " +  str(mode_num))
+
+        # Get mode ID
+        mode_id = master.mode_mapping()[mode]
+        #print("Mode id: " + str(mode_id))
+
+        # Set new mode
+        master.mav.command_long_send(
+        master.target_system, master.target_component,
+        mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
+        0,
+        1, 
+        mode_id, 0, 0, 0, 0, 0)
+
+        while True:
+            # Wait for ACK command
+            # Would be good to add mechanism to avoid endlessly blocking
+            # if the autopilot sends a NACK or never receives the message
+            ack_msg = master.recv_match(type='COMMAND_ACK', blocking=True)
+            ack_msg = ack_msg.to_dict()
+            #print (ack_msg)
+
+            # Continue waiting if the acknowledged command is not `set_mode`
+            if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+                continue
+
+            # Print the ACK result !
+            print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
+            break
+
+        print("New mode: " + self.get_mode(master))
+
+        
+    def arm(self, master):
+        '''
+        # Arms the aircraft using the mavutil connection object
+        # Example:
+            master = connect('/dev/ttyAMA0', 921600)
+            arm(master)
+
+        # Output:
+            Waiting for the vehicle to arm...
+            [OK] Armed succesfully
+
+        '''
+        try:
+            master.mav.command_long_send(
+                master.target_system,
+                master.target_component,
+                mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+                0,
+                1, 0, 0, 0, 0, 0, 0)
+
+            print("Waiting for the vehicle to arm...")
+            master.motors_armed_wait()
+
+            if master.motors_armed():
+                print('[OK] Armed succesfully')
+        except:
+            print('[ERROR] Arming failed')
+
+
+    def disarm(self, master):
+        '''
+        # Disarms the aircraft using the mavutil connection object
+        # Example:
+            master = connect('/dev/ttyAMA0', 921600)
+            disarm(master)
+
+        # Output:
+            Waiting for the vehicle to disarm...
+            [OK] Disarmed succesfully
+        '''
+        try:
+            master.mav.command_long_send(
+                master.target_system,
+                master.target_component,
+                mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
+                0,
+                0, 0, 0, 0, 0, 0, 0)
+
+            print("Waiting for the vehicle to disarm...")
+            master.motors_disarmed_wait()
+
+            if not master.motors_armed():
+                print('[OK] Disarmed succesfully')
+        except:
+            print('[ERROR] Disarming failed')
+
+
+
+
 def open_logfile(filename):
     ''' 
     # Open a new log file to keep track of activity
@@ -94,6 +281,7 @@ def open_logfile(filename):
 
     '''
 
+
     file_name = filename + ".txt"
     try:
         log_file = open(file_name, "x")
@@ -102,177 +290,16 @@ def open_logfile(filename):
 
     curr_time = datetime.datetime.now()
     log_file.write("\n*** LOGFILE: " + file_name + " - " + curr_time.strftime("%x %X") + " ***\n")
-
     return log_file
 
-def connect(connection_string='/dev/ttyAMA0', baudrate=921600):
-    '''
-    # Connect to the autopilot
-    # Returns a mavutil connection object to handle all methods in the vehicle
-    # Example:
-        master = connect('/dev/ttyAMA0', 921600)
-    
-    # Output:
-        Waiting to connect...
-        [OK] Connected
-    '''
-    try:
-        master = mavutil.mavlink_connection(connection_string, baudrate)
-        print("Waiting to connect...")
-        master.wait_heartbeat()
-        print("[OK] Connected")
-        return master
-    except:
-        print("[FAIL] Connection not established")
 
 
-def get_mode(master):
-    '''
-    # Read current flight mode
-    # There are two ways, the attribute "flightmode", or using the 
-    # heartbeat message to infer the current mode.
-    # Example:
-        get_mode(master)
-
-    # Output:
-        Current mode: 'STABILIZE'
-    '''
-
-    #print("Current mode directamente:")
-    #print(master.flightmode)
-
-    #print("Current mode con heartbeat:")
-    mode_num = 0
-    for i in range(0, 2):
-        try:
-            msg = master.recv_match(type="HEARTBEAT", blocking=True).to_dict()
-            #pprint.pprint(msg['base_mode'])
-            #pprint.pprint(msg['custom_mode'])
-            if msg['custom_mode'] > mode_num:
-                mode_num = msg['custom_mode']
-            #print("*************************************************")
-        except Exception as e:
-            print(e)
-        time.sleep(0.1)
-
-    mode =  modelist[mode_num]
-    #print("Current mode: " + mode)
-    return mode
-
-def set_mode(master, mode):
-    '''
-    # Set a new mode to the aircraft
-    # First, it checks the current mode and then tries to change it
-    # Example:
-        set_mode(master, 'LOITER')
-    
-    # Output:
-        Mode changed to 'LOITER'
-        (check the GCS to see if it's actually changed)
-    '''
-
-    print("Current mode: " + get_mode(master))
-
-    mode = mode.upper()
-    
-    # Check if mode is available
-    if mode not in master.mode_mapping():
-        print('Unknown mode : {}'.format(mode))
-        print('Try:', list(master.mode_mapping().keys()))
-        sys.exit(1)
-
-    # Imprimimos la tabla hash de modos y su numero asociado
-    # print("HASH TABLE - mode_mapping")
-    # for i in modelist:
-    #     mode_num = master.mode_mapping()[i]
-    #     print(i + ": " +  str(mode_num))
-
-    # Get mode ID
-    mode_id = master.mode_mapping()[mode]
-    #print("Mode id: " + str(mode_id))
-
-    # Set new mode
-    master.mav.command_long_send(
-    master.target_system, master.target_component,
-    mavutil.mavlink.MAV_CMD_DO_SET_MODE, 
-    0,
-    1, 
-    mode_id, 0, 0, 0, 0, 0)
-
-    while True:
-        # Wait for ACK command
-        # Would be good to add mechanism to avoid endlessly blocking
-        # if the autopilot sends a NACK or never receives the message
-        ack_msg = master.recv_match(type='COMMAND_ACK', blocking=True)
-        ack_msg = ack_msg.to_dict()
-        #print (ack_msg)
-
-        # Continue waiting if the acknowledged command is not `set_mode`
-        if ack_msg['command'] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
-            continue
-
-        # Print the ACK result !
-        print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
-        break
-
-    print("New mode: " + get_mode(master))
 
 
-def arm(master):
-    '''
-    # Arms the aircraft using the mavutil connection object
-    # Example:
-        master = connect('/dev/ttyAMA0', 921600)
-        arm(master)
-
-    # Output:
-        Waiting for the vehicle to arm...
-        [OK] Armed succesfully
-
-    '''
-    try:
-        master.mav.command_long_send(
-            master.target_system,
-            master.target_component,
-            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-            0,
-            1, 0, 0, 0, 0, 0, 0)
-
-        print("Waiting for the vehicle to arm...")
-        master.motors_armed_wait()
-
-        if master.motors_armed():
-            print('[OK] Armed succesfully')
-    except:
-        print('[FAIL] Arming failed')
 
 
-def disarm(master):
-    '''
-    # Disarms the aircraft using the mavutil connection object
-    # Example:
-        master = connect('/dev/ttyAMA0', 921600)
-        disarm(master)
 
-    # Output:
-        Waiting for the vehicle to disarm...
-        [OK] Disarmed succesfully
-    '''
-    try:
-        master.mav.command_long_send(
-            master.target_system,
-            master.target_component,
-            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-            0,
-            0, 0, 0, 0, 0, 0, 0)
 
-        print("Waiting for the vehicle to disarm...")
-        master.motors_disarmed_wait()
-
-        if not master.motors_armed():
-            print('[OK] Disarmed succesfully')
-    except:
-        print('[FAIL] Arming failed')
 
 
 # Methods to handle different types of messages
@@ -399,7 +426,7 @@ def set_wifi(command):
             os.system(cmd)
             print("[OK] Wi-Fi turned " + command)
         except:
-            print("[FAIL] Wi-Fi not set")
+            print("[ERROR] Wi-Fi not set")
     else:
         print("Command not valid (must be 'up' or 'down')")
 
@@ -433,13 +460,17 @@ def move_servo(master, servo_n=10, microsec=1100):
         
         print("[OK] Servo "  + str(servo_n) + " moved to " + str(microsec))
     except:
-        print("[FAIL] Servo at home")
+        print("[ERROR] Servo position not set")
 
 
-# Get current date and time
-def get_datetime():
-    x = datetime.datetime.now()
-    return x.strftime("%x %X")
+
+
+def internet_on(url):
+    try:
+        with contextlib.closing(urlopen(url, timeout=1)) as x:
+            return True
+    except URLError as err: 
+        return False
 
 
 # # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
@@ -451,13 +482,47 @@ def get_datetime():
 
 def main():
     print(get_datetime())
-    master = connect('/dev/ttyAMA0', 921600)
+    drone = Vehicle()
+    master = drone.connect('/dev/ttyAMA0', 921600)
+
     javilog = open_logfile("javilog")
-    javilog.write("javikit 1")
+    javilog.write("[OK] Connected\n")
     #read_messages(master)
-    print("Initial mode: " + get_mode(master))
-    set_mode(master, 'LOITER')
-    move_servo(master, 10, 1100)
+
+    print("Initial mode: " + drone.get_mode(master))
+    newmode = input("Introduce the new mode: ")
+    newmode.upper()
+
+    drone.set_mode(master, newmode)
+    if drone.get_mode(master) == newmode:
+        javilog.write("[OK] Mode set succesfully\n")
+    else:
+        javilog.write("[ERROR] Mode not set\n")
+
+
+    pos = input("Introduce the servo position: ")
+    move_servo(master, 10, int(pos))
+    javilog.write("[OK] Servo position set\n")
+    
+    drone.arm(master)    
+    set_wifi("down")
+    countdown(3)
+
+    if not internet_on('http://216.58.192.142'):
+        print("Internet down")
+    else:
+        print("codigo mugre 1")
+
+    countdown(3)
+    drone.disarm(master)
+    set_wifi("up")
+    countdown(8)
+
+    #'https://bing.com'
+    if internet_on('https://bing.com'):
+        print("Internet up")
+    else:
+        print("codigo mugre 2")
 
 
 if __name__ == '__main__':
