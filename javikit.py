@@ -1,6 +1,6 @@
 ''' ******************************************************************
     JAVIKIT v1.0
-    Python API for easy use of pymavlink methods from a companion computer
+    Python API for easy use of pymavlink library from a companion computer
 ****************************************************************** '''
 
 import os, sys, time, datetime, re, pprint
@@ -11,8 +11,9 @@ from urllib.request import urlopen, URLError
 
 # Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
 # Cambiar las descripciones y los ejemplos de uso de los metodos CUANDO LOS ACABE DE REFACTORIZAR
+
+# Usar Streamlit para la web
 # Buscar javascript drag and drop box for a file, to upload it in the web to the raspi
-# Hacer un metodo que imprima tanto por consola como en el logfile, que sino es un coñazo poner el print y el logfile.write todo el rato
 
 # Para vuelos de long range, la GCS manda comandos al cubo, y desde la raspi solicitamos todos
 # los mensajes y vamos revisando los que yo diga (x mensajes significan esto) que me pueden mandar desde la GCS o desde un 
@@ -20,18 +21,22 @@ from urllib.request import urlopen, URLError
 
 # Actions to do with the aircraft
 # tomar fotos
-# desplegar/replegar ash cathcer
+# desplegar/replegar ash catcher
 # leer todos los mensajes y hacer un analisis del estado de la nave: temp motores, bateria etc, e inferir un estado de la maquina de estados de toda esa info
 # y una vez sepamos el estado de la state machine, hacer una cosa u otra en respuesta: volver a casa, recalcular waypoints y reprogramar la mision, etc
 # definir dos o tres estados basicos, con una respuesta cada uno, y listo
-# bateria baja -> respuesta volver a casa, modo RTL
-# temperatura alta en motor -> reprogramar un waypoint
-# estado normal -> no hacer nada
-# y asi como future work, seria expandir esta maquina de estados para hacerla mas compleja y darle mas inteligencia a la nave
+#  y asi como future work, seria expandir esta maquina de estados para hacerla mas compleja y darle mas inteligencia a la nave
+# ESTADOS:
+# -bateria baja -> respuesta volver a casa, modo RTL
+# -temperatura alta en motor -> reprogramar un waypoint o bajar el throttle, la altitud, la velocidad o lo que sea
+# -estado normal -> solo loggear el estado del avion cada x tiempo, imprimirlo por consola y que asi lo vean en la web en tierra? pero como mierda se 
+# publica la web cuando estoy en el aire??, si no tengo internet ni red local... na eso no. la terminal en vivo chungo, a menos que lo comunique 
+# de otra forma con el laptop, como lo que dijo TomR sobre comunicar python en tierra con el python en la raspi en el aire
+
 
 def countdown(seconds):
     '''
-    Show a countdown of some seconds onscreen
+    Show a countdown of given seconds onscreen
     Example
         countdown(3)
 
@@ -65,7 +70,7 @@ def get_datetime():
 class Vehicle:
     '''
     Represents a connection with the autopilot via MAVlink.
-    Provides methods to receive and send information to the autopilot such as the messages, flightmode, servo position or arming and disarming the aircraft
+    Provides methods to receive and send information to the autopilot (messages, flightmode, arming and more)
     '''
 
     modelist = [
@@ -89,6 +94,7 @@ class Vehicle:
         Connect to the autopilot
         Returns a mavutil connection object to handle all methods in the vehicle
         Example:
+            # Connecting to an autopilot via USB cable
             drone = Vehicle()
             drone.connect('/dev/ttyAMA0', 921600)
         
@@ -104,12 +110,13 @@ class Vehicle:
         except:
             print("[ERROR] Connection not established")
 
-    # Send heartbeat from a MAVLink application (from the script running on Raspberry Pi)
+    
     def receive_heartbeat(self):
         '''
         Autopilot receives the heartbeat from the python script to prove the companion computer is alive
         Example:
             drone = Vehicle()
+            # ... connect to the vehicle
             drone.receive_heartbeat()
 
         Output:
@@ -277,17 +284,17 @@ class Vehicle:
 
         try:
 
-            # self.master.mav.commsand_long_send(
-            #     self.master.target_system, 
-            #     self.master.target_component,
-            #     mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
-            #     0,            # first transmission of this command
-            #     servo_n,  # servo instance
-            #     microseconds, # PWM pulse-width
-            #     0,0,0,0,0     # unused parameters
-            # )
+            self.master.mav.command_long_send(
+                self.master.target_system, 
+                self.master.target_component,
+                mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
+                0,            # first transmission of this command
+                servo_n,  # servo instance
+                microsec, # PWM pulse-width
+                0,0,0,0,0     # unused parameters
+            )
 
-            self.master.set_servo(servo_n, microsec)
+            # self.master.set_servo(servo_n, microsec)
             
             print("[OK] Servo "  + str(servo_n) + " moved to " + str(microsec))
         except:
@@ -295,64 +302,68 @@ class Vehicle:
 
 
     # Methods to handle different types of messages
-    def handle_heartbeat(msg):
+    def handle_heartbeat(self, msg):
         mode = mavutil.mode_string_v10(msg)
         is_armed = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
         is_enabled = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_GUIDED_ENABLED
+        print("Mode: {}".format(mode))
+        print("Armed?: {}".format(is_armed))
+        print("Enabled?: {}".format(is_enabled))
 
-    def handle_rc_channels(msg):
+    def handle_rc_channels(self, msg):
         channels = (msg.chan1_raw, msg.chan2_raw, msg.chan3_raw, msg.chan4_raw, 
-                msg.chan5_raw, msg.chan6_raw, msg.chan7_raw, msg.chan8_raw)#,
-                #msg.chan9_raw, msg.chan10_raw, msg.chan11_raw, msg.chan12_raw, 
-                #msg.chan13_raw, msg.chan14_raw, msg.chan15_raw, msg.chan16_raw, 
-                #msg.chan17_raw, msg.chan18_raw)
+                msg.chan5_raw, msg.chan6_raw, msg.chan7_raw, msg.chan8_raw,
+                msg.chan9_raw, msg.chan10_raw, msg.chan11_raw, msg.chan12_raw, 
+                msg.chan13_raw, msg.chan14_raw, msg.chan15_raw, msg.chan16_raw, 
+                msg.chan17_raw, msg.chan18_raw)
         
         the_keys = msg.to_dict().keys()
-        #r = re.compile("^chan[0-2]*[0-9]_raw$") # regex for channels up to 18
-        r = re.compile("^chan[1-8]{1}_raw$") # regex for channels 1-8
+        r = re.compile("^chan[0-2]*[0-9]_raw$") # regex for channels up to 18
+        #r = re.compile("^chan[1-8]{1}_raw$") # regex for channels 1-8
         new_keys = list(filter(r.match, the_keys))
-        #print(new_keys)
 
-        for i in new_keys:
-            print("{}".format(i), end=' |')
-            if i == list(new_keys)[-1]:
-                print('')
-        
-        for item in channels:
-            print("{}".format(item), end=9*' ' + '|')
-            if channels.index(item) == -1:
-                print('')
+        for i in range(0, len(channels)):
+            print("{}: {:0.2f}".format(new_keys[i], channels[i]))
 
-    def handle_hud(msg):
+
+    def handle_hud(self, msg):
         hud_data = (msg.airspeed, msg.groundspeed, msg.heading, 
                     msg.throttle, msg.alt, msg.climb)
-        print("Aspd\tGspd\tHead\tThro\tAlt\tClimb")
-        print("%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f" % hud_data)
+        hud_vars = ("Airspeed", "GroundSpeed", "Heading", "Throttle", "Alt", "Climb")
+        
+        for i in range(0, len(hud_data)):
+            print("{}: {:0.2f}".format(hud_vars[i], hud_data[i]))
 
-    def handle_attitude(msg):
+
+    def handle_attitude(self, msg):
         attitude_data = (msg.roll, msg.pitch, msg.yaw, msg.rollspeed, 
                     msg.pitchspeed, msg.yawspeed)
-        print("Roll\tPit\tYaw\tRSpd\tPSpd\tYSpd")
-        print("%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t" % attitude_data)
+        attitude_vars = ("Roll", "Pitch", "Yaw", "RollSpeed", "PitchSpeed", "YawSpeed")
 
-    def handle_sys_status(msg):
+        for i in range(0, len(attitude_data)):
+            print("{}: {:0.2f}".format(attitude_vars[i], attitude_data[i]))
+
+
+    def handle_sys_status(self, msg):
         sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
-        print ("read sys_status")
+        sys_status_vars = ("Battery remaining", "Current battery", "Load", "Voltage battery")
+        
+        for i in range(0, len(sys_status_data)):
+            print("{}: {:0.2f}".format(sys_status_vars[i], sys_status_data[i]))
 
-    def request_msg(self, freq=4):
+
+    def request_all_msgs(self, freq=4):
         '''
         Request all types of messages with given frequency (4 by default)
         Example:
             drone = Vehicle()
             # ... connect to the vehicle
             freq = 8
-            drone.request_msg(freq)
+            drone.request_all_msgs(freq)
         
         Output:
             (none)
         '''
-
-        # Poner la alternativa con command_long MAV_DO_REQUEST_MSG o similar
 
         self.master.mav.request_data_stream_send(
             self.master.target_system, 
@@ -376,7 +387,7 @@ class Vehicle:
 
         # First, request all types of messages to the stream
         freq = 4
-        self.request_msg(freq)
+        self.request_all_msgs(freq)
 
         while(True):
 
@@ -386,8 +397,6 @@ class Vehicle:
                 print("No message")
             else:
                 #pprint.pprint(msg.to_dict())
-                #print(msg.to_dict().keys())
-
                 # handle the message based on its type
                 msg_type = msg.get_type()
                 print("Message " + msg_type)
@@ -408,7 +417,7 @@ class Vehicle:
                     self.handle_sys_status(msg)
 
                 print("\n*****************")
-            time.sleep(0.1)
+            time.sleep(0.2)
 
 
 
@@ -493,13 +502,61 @@ class CompanionComputer:
         Output:
             [OK] Internet available (in both console and log file)
         '''
+        #TRY ANOTHER WAY
         try:
-            with contextlib.closing(urlopen(url, timeout=10)) as x:
-                self.output("[INFO] Internet available")
-                return True
-        except URLError as err:
+            urlopen(url, timeout=10)
+            self.output("[INFO] Internet available")
+            return True
+        except Exception as exc:
+            print(exc)
             self.output("[INFO] Internet not available")
             return False
+
+
+# Get mode, set mode, move servo
+def demo1(drone, raspi):
+    raspi.output("[INFO] Demo 1")
+
+    print("Initial mode: " + drone.get_mode())
+    newmode = input("Introduce the new mode: ")
+    newmode.upper()
+
+    drone.set_mode(newmode)
+    raspi.output("[OK] Mode set to " + newmode)
+
+    pos = int(input("Introduce the servo position: "))
+    drone.move_servo(10, pos)
+    raspi.output("[OK] Servo position set")
+
+
+# Arm, turn Wi-Fi off, wait, disarm, turn Wi-Fi on
+def demo2(drone, raspi):
+    raspi.output("[INFO] Demo 2")
+
+
+    drone.arm()
+    raspi.set_wifi("down")
+
+    # Give 1 second to turn off Wi-Fi
+    countdown(3)
+
+    # 'http://216.58.192.142'
+    raspi.check_internet('http://216.58.192.142')
+
+    drone.disarm()
+    raspi.set_wifi("up")
+
+    # Give 10 seconds to reconnect to a Wi-Fi network
+    countdown(10)
+ 
+    # 'https://bing.com'
+    raspi.check_internet('https://bing.com')
+
+
+# Read all messages and display the info
+def demo3(drone, raspi):
+    raspi.output("[INFO] Demo 3")
+    drone.read_messages()
 
 
 def main():
@@ -510,30 +567,14 @@ def main():
     drone.connect('/dev/ttyAMA0', 921600)
     raspi.output("[OK] Connected")
     
-    #drone.read_messages()
+    n = int(input("Demo number?: "))
+    if n==1:
+        demo1(drone, raspi)
+    elif n==2:
+        demo2(drone, raspi)
+    elif n==3:
+        demo3(drone, raspi)
 
-    print("Initial mode: " + drone.get_mode())
-    newmode = input("Introduce the new mode: ")
-    newmode.upper()
-
-    drone.set_mode(newmode)
-
-    pos = int(input("Introduce the servo position: "))
-    drone.move_servo(10, pos)
-    raspi.output("[OK] Servo position set")
-    
-    drone.arm()    
-    raspi.set_wifi("down")
-    countdown(1) # Turning off Wi-Fi is almost immediate
-
-    raspi.check_internet('http://216.58.192.142')
-
-    drone.disarm()
-    raspi.set_wifi("up")
-    countdown(6) # It takes about 6 seconds to reconnect to a Wi-Fi network
- 
-    # Different url to avoid opening the first one twice
-    raspi.check_internet('https://bing.com')
 
 
 if __name__ == '__main__':
