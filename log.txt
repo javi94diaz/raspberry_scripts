@@ -1,0 +1,10 @@
+
+*** LOGFILE: log.txt - 18/08/22 13:31:16 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 18/08/22 13:43:50 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 18/08/22 13:43:56 ***
+[OK] Connected
+[INFO] Demo 3
