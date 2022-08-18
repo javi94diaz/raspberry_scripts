@@ -3,10 +3,22 @@
 <head>
 
     <title>Flight checks website</title>
+
+    <meta charset="UTF-8">  
     <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css">
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"> </script>
    
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.js">
+    </script>
+
+<!--
+
+    <script type="text/javascript" src="/static/app.js"></script>
+-->
+
+
     <script type=text/javascript> 
         
         $(function() { $("#mybutton").click(function (event) { $.getJSON('/arm', { },
@@ -14,20 +26,24 @@
     
     </script> 
 
+
     <script type=text/javascript>
-            
+        
         $(function() {
-        $('a#test').on('click', function(e) {
-            e.preventDefault()
-            $.getJSON('/disarm',
+            $('a#test').on('click', function(e) {
+                e.preventDefault()
+                $.getJSON('/disarm',
                 function(data) {
                     // Do nothing
                 });
-            return false;
+                return false;
+            });
         });
-        });
-
+        
     </script>
+
+
+    
 
 </head>
 
@@ -37,7 +53,7 @@
     <div class='container'>
         <h3>Arm</h3>
             <form>
-                <input type = "button" id = "mybutton" value = "Arm and turn off WiFi" />
+                <input type = "button" id = "mybutton" value = "Arm and turn off Wi-Fi" />
             </form>
     
     </div>
@@ -45,10 +61,43 @@
     <div class='container'>
         <h3>Disarm</h3>
             <form>
-                <a href=# id=test><button class='btn btn-default'>Disarm and turn on WiFi</button></a>
+                <a href=# id=test><button class='btn btn-default'>Disarm and turn on Wi-Fi</button></a>
             </form>
     
     </div>
+
+    <script type="text/javascript">
+        function uploadFile(form)
+        {
+        const formData = new FormData(form);
+        var oOutput = document.getElementById("static_file_response")
+        var oReq = new XMLHttpRequest();
+            oReq.open("POST", "upload_static_file", true);
+        oReq.onload = function(oEvent) {
+            if (oReq.status == 200) {
+            oOutput.innerHTML = "Uploaded!";
+            console.log(oReq.response)
+            } else {
+            oOutput.innerHTML = "Error occurred when trying to upload your file.<br \/>";
+            }
+            };
+        oOutput.innerHTML = "Sending file!";
+        console.log("Sending file!")
+        oReq.send(formData);
+        }
+    </script>
+
+    <div type="container">
+        <h3>Upload a Python file</h3>
+        <form enctype = "multipart/form-data" onsubmit="return false;" >
+            <input id="file" type="file" name="static_file" accept=".py"/>
+            <button id="upload-button" onclick="uploadFile(this.form)"> Upload </button>
+        </form>
+        <div id="static_file_response"> </div>
+
+    </div>
+
+     
 
 </body>
 </html>

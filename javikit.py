@@ -554,27 +554,6 @@ class CompanionComputer:
             print("Command not valid (must be 'up' or 'down')")
 
 
-    def check_internet(self, url):
-        '''
-        Check if internet connection is available opening a given url
-        Example:
-            my_computer = CompanionComputer()
-            my_computer.check_internet('http://216.58.192.142'):
-            
-        
-        Output:
-            [OK] Internet available (in both console and log file)
-        '''
-        try:
-            urlopen(url, timeout=10)
-            self.output("[INFO] Internet available")
-            return True
-        except Exception as exc:
-            print(exc)
-            self.output("[INFO] Internet not available")
-            return False
-
-
     def check_wifi(self):
         '''
         Check if Wi-Fi internet is set up or not with a shell command
@@ -594,6 +573,26 @@ class CompanionComputer:
         else:
             self.output("[INFO] Wi-Fi Up")
 
+
+    def check_internet(self, url):
+        '''
+        Check if internet connection is available opening a given url
+        Example:
+            my_computer = CompanionComputer()
+            my_computer.check_internet('http://216.58.192.142'):
+            
+        
+        Output:
+            [OK] Internet available (in both console and log file)
+        '''
+        try:
+            urlopen(url, timeout=10)
+            self.output("[INFO] Internet available")
+            return True
+        except Exception as exc:
+            print(exc)
+            self.output("[INFO] Internet not available")
+            return False
 
 
 # Get mode, set mode, move servo
