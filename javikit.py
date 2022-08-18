@@ -3,35 +3,22 @@
     Python API for easy use of pymavlink library from a companion computer
 ****************************************************************** '''
 
-import os, sys, time, datetime, re, pprint
-import contextlib
-from pymavlink import mavutil
+# example change to git push test
+
+import os
+import re
+import sys
+import time
+import pprint
+import datetime
+import subprocess
 from urllib.request import urlopen, URLError
+from pymavlink import mavutil
 
 
 # Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
-# Cambiar las descripciones y los ejemplos de uso de los metodos CUANDO LOS ACABE DE REFACTORIZAR
-
 # Usar Streamlit para la web
 # Buscar javascript drag and drop box for a file, to upload it in the web to the raspi
-
-# Para vuelos de long range, la GCS manda comandos al cubo, y desde la raspi solicitamos todos
-# los mensajes y vamos revisando los que yo diga (x mensajes significan esto) que me pueden mandar desde la GCS o desde un 
-# switch del mando para ejecutar una u otra funcion/script en la raspi
-
-# Actions to do with the aircraft
-# tomar fotos
-# desplegar/replegar ash catcher
-# leer todos los mensajes y hacer un analisis del estado de la nave: temp motores, bateria etc, e inferir un estado de la maquina de estados de toda esa info
-# y una vez sepamos el estado de la state machine, hacer una cosa u otra en respuesta: volver a casa, recalcular waypoints y reprogramar la mision, etc
-# definir dos o tres estados basicos, con una respuesta cada uno, y listo
-#  y asi como future work, seria expandir esta maquina de estados para hacerla mas compleja y darle mas inteligencia a la nave
-# ESTADOS:
-# -bateria baja -> respuesta volver a casa, modo RTL
-# -temperatura alta en motor -> reprogramar un waypoint o bajar el throttle, la altitud, la velocidad o lo que sea
-# -estado normal -> solo loggear el estado del avion cada x tiempo, imprimirlo por consola y que asi lo vean en la web en tierra? pero como mierda se 
-# publica la web cuando estoy en el aire??, si no tengo internet ni red local... na eso no. la terminal en vivo chungo, a menos que lo comunique 
-# de otra forma con el laptop, como lo que dijo TomR sobre comunicar python en tierra con el python en la raspi en el aire
 
 
 def countdown(seconds):
@@ -502,7 +489,6 @@ class CompanionComputer:
         Output:
             [OK] Internet available (in both console and log file)
         '''
-        #TRY ANOTHER WAY
         try:
             urlopen(url, timeout=10)
             self.output("[INFO] Internet available")
@@ -511,6 +497,26 @@ class CompanionComputer:
             print(exc)
             self.output("[INFO] Internet not available")
             return False
+
+    def check_wifi(self):
+        '''
+        Check if Wi-Fi internet is set up or not with a shell command
+        Example:
+            my_computer = CompanionComputer()
+            my_computer.check_wifi()
+            
+        Output (in console and log file):
+            [INFO] Wi-Fi Up
+        '''
+        result = subprocess.run(['iwconfig', 'wlan0'], stdout=subprocess.PIPE)
+        str_stdout = result.stdout.decode('utf-8')
+        index = str_stdout.find('ESSID:') + 6
+
+        if str_stdout[index:index+7] == 'off/any':
+            self.output("[INFO] Wi-Fi Down")
+        else:
+            self.output("[INFO] Wi-Fi Up")
+
 
 
 # Get mode, set mode, move servo
@@ -537,21 +543,20 @@ def demo2(drone, raspi):
     drone.arm()
     raspi.set_wifi("down")
 
-    # Give 1 second to turn off Wi-Fi
+    # Give 3 seconds to turn off Wi-Fi
     countdown(3)
 
-    # 'http://216.58.192.142'
-    raspi.check_internet('http://216.58.192.142')
+    #raspi.check_internet('http://216.58.192.142')
+    raspi.check_wifi()
 
     drone.disarm()
     raspi.set_wifi("up")
 
-    # Give 10 seconds to reconnect to a Wi-Fi network
-    countdown(10)
+    # Give 7 seconds to reconnect to a Wi-Fi network
+    countdown(7)
  
-    # 'https://bing.com'
-    raspi.check_internet('https://bing.com')
-
+    #raspi.check_internet('https://bing.com')
+    raspi.check_wifi()
 
 # Read all messages and display the info
 def demo3(drone, raspi):
