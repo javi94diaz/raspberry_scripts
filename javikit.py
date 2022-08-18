@@ -3,8 +3,6 @@
     Python API for easy use of pymavlink library from a companion computer
 ****************************************************************** '''
 
-# example change to git push test
-
 import os
 import re
 import sys
@@ -565,7 +563,7 @@ def demo3(drone, raspi):
 
 
 def main():
-    print(get_datetime())
+    print("Main " + get_datetime())
     drone = Vehicle()
     raspi = CompanionComputer()
 
