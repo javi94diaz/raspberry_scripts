@@ -55,7 +55,8 @@ def get_datetime():
 class Vehicle:
     '''
     Represents a connection with the autopilot via MAVlink.
-    Provides methods to receive and send information to the autopilot (messages, flightmode, arming and more)
+    Provides methods to receive and send information to the 
+    autopilot (messages, flightmode, arming and more).
     '''
 
     modelist = [
@@ -288,6 +289,18 @@ class Vehicle:
 
     # Methods to handle different types of messages
     def handle_heartbeat(self, msg):
+        '''
+        Read three fields of the heartbeat messages to display them
+        Example:
+            handle_heartbeat(msg)
+
+        Output:
+            Message HEARTBEAT
+            Mode: Mode(0x00000000)
+            Armed?: 0
+            Enabled?: 0
+        '''
+
         mode = mavutil.mode_string_v10(msg)
         is_armed = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
         is_enabled = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_GUIDED_ENABLED
@@ -296,6 +309,33 @@ class Vehicle:
         print("Enabled?: {}".format(is_enabled))
 
     def handle_rc_channels(self, msg):
+        '''
+        Read RC channels 1 to 18 values and display them
+        Example:
+            handle_rc_channels(msg)
+
+        Output:
+            Message RC_CHANNELS
+            chanl_raw: 0.00
+            chan2 raw: 0.00
+            chan3 raw: 0.00
+            chan4 raw: 0.00
+            chan5_raw: 0.00
+            chan6_raw: 0.00
+            chan7_raw: 0.00
+            chan8_raw: 0.00 
+            chan9 raw: 0.00
+            chan10_raw: 0.00
+            chanll raw: 0.00
+            chan12 raw: 0.00
+            chan13 raw: 0.00
+            chan14 raw: 0.00
+            chan15 raw: 0.00
+            chan16 raw: 0.00
+            chan17 raw: 0.00
+            chan18_raw: 0.00
+        '''
+
         channels = (msg.chan1_raw, msg.chan2_raw, msg.chan3_raw, msg.chan4_raw, 
                 msg.chan5_raw, msg.chan6_raw, msg.chan7_raw, msg.chan8_raw,
                 msg.chan9_raw, msg.chan10_raw, msg.chan11_raw, msg.chan12_raw, 
@@ -312,6 +352,22 @@ class Vehicle:
 
 
     def handle_hud(self, msg):
+        '''
+        Read airspeed, groundspeed, heading, throttle, altitude and climb
+        from a HUD message and display them
+        Example:
+            handle_hud(msg)
+        
+        Output:
+            Message VFR_HUD
+            Airspeed: 0.00
+            GroundSpeed: 0.01
+            Heading: 279.00
+            Throttle: 0.00
+            Alt: 0.00
+            Climb: -0.01
+        '''
+
         hud_data = (msg.airspeed, msg.groundspeed, msg.heading, 
                     msg.throttle, msg.alt, msg.climb)
         hud_vars = ("Airspeed", "GroundSpeed", "Heading", "Throttle", "Alt", "Climb")
@@ -321,6 +377,21 @@ class Vehicle:
 
 
     def handle_attitude(self, msg):
+        '''
+        Read roll, pitch, yaw and its variation speeds: rollspeed, pitchspeed, yawspeed to display them
+        Example:
+            handle_attitude(msg)
+
+        Output:
+            Message ATTITUDE
+            Roll: -0.01
+            Pitch: -0.01
+            Yaw: -1.40
+            RollSpeed: -0.00
+            PitchSpeed: -0.00
+            YawSpeed: 0.00
+        '''
+
         attitude_data = (msg.roll, msg.pitch, msg.yaw, msg.rollspeed, 
                     msg.pitchspeed, msg.yawspeed)
         attitude_vars = ("Roll", "Pitch", "Yaw", "RollSpeed", "PitchSpeed", "YawSpeed")
@@ -330,6 +401,9 @@ class Vehicle:
 
 
     def handle_sys_status(self, msg):
+        '''
+        Read important fields of the system status: battery voltage, battery remaining, current battery and load to display them
+        '''
         sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
         sys_status_vars = ("Battery remaining", "Current battery", "Load", "Voltage battery")
         
@@ -407,6 +481,10 @@ class Vehicle:
 
 
 class CompanionComputer:
+    '''
+    Represents a companion computer, such as a Raspberry Pi.
+    It wraps some methods to log information an manage wlan interface
+    '''
 
     def __init__(self):
         self.log_file = self.open_logfile("log")
@@ -495,6 +573,7 @@ class CompanionComputer:
             print(exc)
             self.output("[INFO] Internet not available")
             return False
+
 
     def check_wifi(self):
         '''
