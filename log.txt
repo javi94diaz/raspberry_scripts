@@ -1,0 +1,34 @@
+
+*** LOGFILE: log.txt - 19/08/22 14:04:37 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 19/08/22 14:07:23 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 19/08/22 14:14:17 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 19/08/22 14:39:42 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 19/08/22 14:40:08 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 19/08/22 16:33:13 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 19/08/22 17:05:49 ***
+[OK] Connected
+[INFO] Demo 1
+[OK] Mode set to loiter
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 19/08/22 17:08:14 ***
+[OK] Connected
+[INFO] Demo 1
+[OK] Mode set to stabilize
+[OK] Servo position set

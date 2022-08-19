@@ -16,7 +16,8 @@ from pymavlink import mavutil
 
 # Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
 # Usar Streamlit para la web
-# Buscar javascript drag and drop box for a file, to upload it in the web to the raspi
+
+# CAMBIAR EL READ MESSAGES PARA QUE NO SEA UN WHILE TRUE BLOQUEANTE
 
 
 def countdown(seconds):
@@ -385,8 +386,8 @@ class Vehicle:
         Output:
             Message ATTITUDE
             Roll: -0.01
-            Pitch: -0.01
-            Yaw: -1.40
+            Pitch: -0.12
+            Yaw: -1.16
             RollSpeed: -0.00
             PitchSpeed: -0.00
             YawSpeed: 0.00
@@ -403,6 +404,16 @@ class Vehicle:
     def handle_sys_status(self, msg):
         '''
         Read important fields of the system status: battery voltage, battery remaining, current battery and load to display them
+        Example:
+            handle_sys_status(msg)
+
+        Output:
+            Message SYS_STATUS
+            Battery remaining: -1.00
+            Current battery: -1.00
+            Load: 500.00
+            Voltage battery: 0.00
+
         '''
         sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
         sys_status_vars = ("Battery remaining", "Current battery", "Load", "Voltage battery")
@@ -455,7 +466,6 @@ class Vehicle:
                 #return
                 print("No message")
             else:
-                #pprint.pprint(msg.to_dict())
                 # handle the message based on its type
                 msg_type = msg.get_type()
                 print("Message " + msg_type)
@@ -474,6 +484,8 @@ class Vehicle:
                     self.handle_attitude(msg)
                 elif msg_type == "SYS_STATUS":
                     self.handle_sys_status(msg)
+                else:
+                    pprint.pprint(msg.to_dict())
 
                 print("\n*****************")
             time.sleep(0.2)
@@ -614,7 +626,6 @@ def demo1(drone, raspi):
 # Arm, turn Wi-Fi off, wait, disarm, turn Wi-Fi on
 def demo2(drone, raspi):
     raspi.output("[INFO] Demo 2")
-
 
     drone.arm()
     raspi.set_wifi("down")

@@ -1,7 +1,8 @@
-##### START
+##### START #####
+
 # Execute webapp.py
 # Open the web page in "localhost:5000"
-# Upload a new script with actions (using the state machine) - do_stuff.py
+# Upload a new script with actions: do_stuff.py (using the state machine to change between states, and when reached a waypoint, move a servo to deploy the ash catcher during certain amount of time)
 # Push button "Preflight checks"
     # (Uploads mission)
     # Checks mode
@@ -21,6 +22,7 @@
 # The script record_data.py is collecting information to show after landing
 
 # Land
+
 # Disarm the drone
 # Wi-Fi ON
 # Execute webapp.py
@@ -28,4 +30,5 @@
 # Script record_data.py has saved the data in files (battery level, voltage, altitude and others)
 # Script show_data.py reads that files and prints graphics on the web page
 # Button "Download Log files" gets the log files from the Autopilot
-##### END
+
+##### END #####

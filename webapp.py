@@ -6,7 +6,7 @@ import os
 from javikit import *
 
 app = Flask (__name__)
-CORS(app)
+#CORS(app)
 
 
 # @app.route('/')
