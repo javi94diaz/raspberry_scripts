@@ -85,9 +85,9 @@ class Vehicle:
         '''
         try:
             self.master = mavutil.mavlink_connection(connection_string, baudrate)
-            print("Waiting to connect...")
+            #print("Waiting to connect...")
             self.master.wait_heartbeat()
-            print("[OK] Connected")
+            #print("[OK] Connected")
         except:
             print("[ERROR] Connection not established")
 
@@ -183,7 +183,7 @@ class Vehicle:
                 continue
 
             # Print the ACK result
-            print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
+            #print(mavutil.mavlink.enums['MAV_RESULT'][ack_msg['result']].description)
             break
 
         print("Mode set to: " + self.get_mode())
@@ -463,7 +463,7 @@ class Vehicle:
         while True:
             msg = self.master.recv_match(blocking=False, type=type)
             if not msg:
-                print("No message\n*****************")
+                print("No message")
                 return -1
             else:
                 value = eval( "msg." + property)
@@ -665,8 +665,10 @@ class CompanionComputer:
 
         if str_stdout[index:index+7] == 'off/any':
             self.output("[INFO] Wi-Fi Down")
+            return False
         else:
             self.output("[INFO] Wi-Fi Up")
+            return True
 
 
     def check_internet(self, url):

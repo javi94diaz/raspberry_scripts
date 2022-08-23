@@ -31,24 +31,40 @@ def upload_static_file():
     return jsonify(resp), 200
 
 
+@app.route('/pre_flight_checks')
+def pre_flight_checks():
+    
+    print("pre flight checks button pressed")
+    print("Current mode: " + drone.get_mode())
+    drone.set_mode('STABILIZE')
+
+    voltage_battery = drone.read_next_msg("SYS_STATUS", "voltage_battery")
+    print("voltage_battery: ", end='')
+    print(voltage_battery)
+
+    return "Nothing"
+
+
 @app.route('/arm')
 def arm():
     drone.arm()
+    raspi.output('[OK] Armed succesfully')
     raspi.set_wifi("down")
     countdown(2)
-    raspi.check_wifi()
-
-    return None
+    #os.system("catch_ashes.py")
+    from uploaded_scripts.catch_ashes import catch_ashes
+    catch_ashes()
+    return "Nothing"
 
 
 @app.route('/disarm')
 def disarm():
 
     drone.disarm()
+    raspi.output('[OK] Disarmed succesfully')
     raspi.set_wifi("up")
     countdown(6)
     raspi.check_wifi()
-
     return "Nothing"
 
 
@@ -58,5 +74,6 @@ if __name__ == '__main__':
     raspi = CompanionComputer()
     drone.connect('/dev/ttyAMA0', 921600)
     raspi.output("[OK] Connected")
+    drone.request_all_msgs(4)
     app.run(debug=True, host='0.0.0.0')
     

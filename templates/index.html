@@ -15,11 +15,35 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
+    <!-- PRE-FLIGHT CHECKS BUTTON ACTION -->
+    <script type=text/javascript> 
+        
+        $(function() {
+            $("#pre_flight_button").click(function (event) {
+                $.getJSON('/pre_flight_checks',
+                { },
+                function(data) {
+
+                }); 
+                return false;
+            });
+        }); 
+    
+    </script> 
+
     <!-- ARM BUTTON ACTION -->
     <script type=text/javascript> 
         
-        $(function() { $("#mybutton").click(function (event) { $.getJSON('/arm', { },
-        function(data) { }); return false; }); }); 
+        $(function() {
+            $("#arm_button").click(function (event) {
+                $.getJSON('/arm',
+                { },
+                function(data) {
+
+                }); 
+                return false;
+            });
+        }); 
     
     </script> 
 
@@ -27,7 +51,7 @@
     <script type=text/javascript>
         
         $(function() {
-            $('a#test').on('click', function(e) {
+            $('a#disarm_button').on('click', function(e) {
                 e.preventDefault()
                 $.getJSON('/disarm',
                 function(data) {
@@ -45,25 +69,31 @@
     
     <h4>Flight checks website</h4>
 
+    <!-- Pre-flight checks button -->
+    <div class='container'>
+        <h3>Pre-flight checks</h3>
+            <form>
+                <input type = "button" id = "pre_flight_button" value = "Pre-flight checks" />
+            </form>
+    </div>
+
     <!-- Arm button -->
     <div class='container'>
         <h3>Arm</h3>
             <form>
-                <input type = "button" id = "mybutton" value = "Arm and turn off Wi-Fi" />
+                <input type = "button" id = "arm_button" value = "Arm and turn off Wi-Fi" />
             </form>
-    
     </div>
 
     <!-- Disarm button -->
     <div class='container'>
         <h3>Disarm</h3>
             <form>
-                <a href=# id=test><button class='btn btn-default'>Disarm and turn on Wi-Fi</button></a>
+                <a href=# id=disarm_button><button class='btn btn-default'>Disarm and turn on Wi-Fi</button></a>
             </form>
-    
     </div>
 
-    <!-- Upload a file script -->  
+    <!-- Upload a file script action -->  
     <script type="text/javascript">
         function uploadFile(form)
         {

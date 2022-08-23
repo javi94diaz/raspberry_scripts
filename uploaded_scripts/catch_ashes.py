@@ -62,10 +62,6 @@ def catch_ashes():
         print("///////////////////////")
         print("Loop count: " + str(i))
 
-        # OJO, ESMEJRO QUE PRIMERO SE FILTRE EL TIPO, Y QUE EL HANDLER DEVUELVA 
-        # LA PROPIEDAD BUSCADAL, QUE SE ACCEDA AL MENSAJE SOLO DENTRO DEL HANDLER, 
-        # ESO TIENE MAS SENTIDO
-
         # Read values from messages
 
         #voltage_battery = drone.read_messages("SYS_STATUS", "voltage_battery")
@@ -99,7 +95,6 @@ def catch_ashes():
 
         print("New state: " + curr_state.name)
         time.sleep(0.5)
-
 
 
 if __name__ == '__main__':

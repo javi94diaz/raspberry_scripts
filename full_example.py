@@ -1,18 +1,17 @@
 ##### START #####
 
-# Execute webapp.py
-# Open the web page in "localhost:5000"
-# Upload a new script with actions: do_stuff.py (using the state machine to change between states, and when reached a waypoint, move a servo to deploy the ash catcher during certain amount of time)
+# Execute webapp.py - DONE
+# Open the web page in "localhost:5000" - DONE
+# Upload a new script with actions: do_stuff.py - DONE
 # Push button "Preflight checks"
-    # (Uploads mission)
-    # Checks mode
+    # Checks mode - DONE
     # Checks GPS signal
-    # Checks battery level
-    # Waits to human confirmation
-# Human pushes button "Pilot OK"
-    # Arm the drone
-    # Wi-Fi OFF
-    # Write everything to the log file
+    # Checks battery level - DONE
+    # Waits to human confirmation??? (manual checks such as setting the mission, connecting batteries, etc)
+# Human pushes button "Pilot OK" or button "Arm and Wi-Fi OFF"
+    # Arm the drone - DONE
+    # Wi-Fi OFF - DONE
+    # Write everything to the log file - DONE
     # Start executing the uploaded script: do_stuff.py
     # Start executing the script record_data.py
 
