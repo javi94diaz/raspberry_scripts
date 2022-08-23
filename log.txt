@@ -32,3 +32,66 @@
 [INFO] Demo 1
 [OK] Mode set to stabilize
 [OK] Servo position set
+
+*** LOGFILE: log.txt - 22/08/22 11:49:39 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 11:50:53 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 14:57:07 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 14:58:27 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 15:59:08 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 15:58:41 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 15:59:16 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 15:59:36 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 22/08/22 16:11:58 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 23/08/22 14:10:36 ***
+[OK] Connected
+[INFO] Demo 1
+[OK] Mode set to loiter
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 23/08/22 14:10:48 ***
+[OK] Connected
+[INFO] Demo 2
+[INFO] Wi-Fi Down
+[INFO] Wi-Fi Up
+
+*** LOGFILE: log.txt - 23/08/22 14:11:16 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 23/08/22 14:11:35 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 23/08/22 14:53:03 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 23/08/22 14:53:52 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 23/08/22 15:09:47 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 23/08/22 15:16:23 ***
+[OK] Connected
+[INFO] Demo 3

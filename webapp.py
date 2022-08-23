@@ -26,7 +26,7 @@ def upload_static_file():
     print("Got request in static files")
     print(request.files)
     f = request.files['static_file']
-    f.save(f.filename)
+    f.save("uploaded_scripts/" + f.filename)
     resp = {"success": True, "response": "file saved!"}
     return jsonify(resp), 200
 
@@ -38,7 +38,7 @@ def arm():
     countdown(2)
     raspi.check_wifi()
 
-    return "Nothing"
+    return None
 
 
 @app.route('/disarm')

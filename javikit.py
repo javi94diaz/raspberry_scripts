@@ -14,12 +14,6 @@ from urllib.request import urlopen, URLError
 from pymavlink import mavutil
 
 
-# Chequiar la clase "mavmmaplog" que es un log file, para mi parte de post-flight
-# Usar Streamlit para la web
-
-# CAMBIAR EL READ MESSAGES PARA QUE NO SEA UN WHILE TRUE BLOQUEANTE
-
-
 def countdown(seconds):
     '''
     Show a countdown of given seconds onscreen
@@ -50,7 +44,7 @@ def get_datetime():
 
     '''
     x = datetime.datetime.now()
-    return x.strftime("%d/%m/%y %X") # don't know why some of them are orange
+    return x.strftime("%d/%m/%y %X")
   
 
 class Vehicle:
@@ -275,10 +269,10 @@ class Vehicle:
                 self.master.target_system, 
                 self.master.target_component,
                 mavutil.mavlink.MAV_CMD_DO_SET_SERVO,
-                0,            # first transmission of this command
-                servo_n,  # servo instance
-                microsec, # PWM pulse-width
-                0,0,0,0,0     # unused parameters
+                0,
+                servo_n,
+                microsec,
+                0,0,0,0,0
             )
 
             # self.master.set_servo(servo_n, microsec)
@@ -289,7 +283,7 @@ class Vehicle:
 
 
     # Methods to handle different types of messages
-    def handle_heartbeat(self, msg):
+    def handle_heartbeat(self, msg, req_property='mode'):
         '''
         Read three fields of the heartbeat messages to display them
         Example:
@@ -308,8 +302,11 @@ class Vehicle:
         print("Mode: {}".format(mode))
         print("Armed?: {}".format(is_armed))
         print("Enabled?: {}".format(is_enabled))
+        
+        return eval(req_property)
 
-    def handle_rc_channels(self, msg):
+
+    def handle_rc_channels(self, msg, req_property='chan1_raw'):
         '''
         Read RC channels 1 to 18 values and display them
         Example:
@@ -351,8 +348,12 @@ class Vehicle:
         for i in range(0, len(channels)):
             print("{}: {:0.2f}".format(new_keys[i], channels[i]))
 
+        value = "msg." + req_property
+        value = eval(value)
+        return value
+        
 
-    def handle_hud(self, msg):
+    def handle_hud(self, msg, req_property='airspeed'):
         '''
         Read airspeed, groundspeed, heading, throttle, altitude and climb
         from a HUD message and display them
@@ -376,8 +377,12 @@ class Vehicle:
         for i in range(0, len(hud_data)):
             print("{}: {:0.2f}".format(hud_vars[i], hud_data[i]))
 
+        value = "msg." + req_property
+        value = eval(value)
+        return value
 
-    def handle_attitude(self, msg):
+
+    def handle_attitude(self, msg, req_property='yaw'):
         '''
         Read roll, pitch, yaw and its variation speeds: rollspeed, pitchspeed, yawspeed to display them
         Example:
@@ -400,8 +405,12 @@ class Vehicle:
         for i in range(0, len(attitude_data)):
             print("{}: {:0.2f}".format(attitude_vars[i], attitude_data[i]))
 
+        value = "msg." + req_property
+        value = eval(value)
+        return value
 
-    def handle_sys_status(self, msg):
+
+    def handle_sys_status(self, msg, req_property='load'):
         '''
         Read important fields of the system status: battery voltage, battery remaining, current battery and load to display them
         Example:
@@ -420,6 +429,10 @@ class Vehicle:
         
         for i in range(0, len(sys_status_data)):
             print("{}: {:0.2f}".format(sys_status_vars[i], sys_status_data[i]))
+
+        value = "msg." + req_property
+        value = eval(value)
+        return value
 
 
     def request_all_msgs(self, freq=4):
@@ -442,8 +455,25 @@ class Vehicle:
             freq, 1)
 
 
-    def read_messages(self):
+    def read_next_msg(self, type, property):
         '''
+        TO_DO: write a description
+        '''
+
+        while True:
+            msg = self.master.recv_match(blocking=False, type=type)
+            if not msg:
+                print("No message\n*****************")
+                return -1
+            else:
+                value = eval( "msg." + property)
+                return value
+
+
+    def read_messages(self, req_type, req_property): 
+        '''
+        TO-DO: UPDATE AND REWRITE
+
         Read all messages from mavlink stream
         Uses an especific handler method for each type of message
         Example:
@@ -455,16 +485,13 @@ class Vehicle:
             (See 'handle_[type_of_message]()' methods for each type of message)
         '''
 
-        # First, request all types of messages to the stream
-        freq = 4
-        self.request_all_msgs(freq)
-
         while(True):
 
             msg = self.master.recv_match(blocking=False)
             if not msg:
-                #return
                 print("No message")
+                #print("No message\n*****************")
+                return -100
             else:
                 # handle the message based on its type
                 msg_type = msg.get_type()
@@ -474,23 +501,79 @@ class Vehicle:
                     if mavutil.all_printable(msg.data):
                         sys.stdout.write(msg.data)
                         sys.stdout.flush()
+                        return -200
+
+                elif msg_type == "RC_CHANNELS" and req_type == "RC_CHANNELS": 
+                    return self.handle_rc_channels(msg, req_property)
+
+                elif msg_type == "HEARTBEAT" and req_type == "HEARTBEAT":
+                    return self.handle_heartbeat(msg, req_property)
+
+                elif msg_type == "VFR_HUD" and req_type == "VFR_HUD":
+                    return self.handle_hud(msg, req_property)
+
+                elif msg_type == "ATTITUDE" and req_type == "ATTITUDE":
+                    return self.handle_attitude(msg, req_property)
+
+                elif msg_type == "SYS_STATUS" and req_type == "SYS_STATUS":
+                    return self.handle_sys_status(msg, req_property)
+
+                else:
+                    #pprint.pprint(msg.to_dict())
+                    return -300
+
+                #print("\n*****************")
+            time.sleep(0.2)
+
+    def read_messages_old(self): 
+        '''
+        Read all messages from mavlink stream
+        Uses an especific handler method for each type of message
+        Example:
+            drone = Vehicle()
+            # ... connect to the vehicle
+            drone.read_messages_old()
+
+        Output
+            (See 'handle_[type_of_message]()' methods for each type of message)
+        '''
+
+        while(True):
+
+            msg = self.master.recv_match(blocking=False)
+            if not msg:
+                print("No message\n*****************")
+
+            else:
+                # handle the message based on its type
+                msg_type = msg.get_type()
+                print("Message " + msg_type)
+
+                if msg_type == "BAD_DATA":
+                    if mavutil.all_printable(msg.data):
+                        sys.stdout.write(msg.data)
+                        sys.stdout.flush()
+
                 elif msg_type == "RC_CHANNELS": 
                     self.handle_rc_channels(msg)
+
                 elif msg_type == "HEARTBEAT":
                     self.handle_heartbeat(msg)
+
                 elif msg_type == "VFR_HUD":
                     self.handle_hud(msg)
+
                 elif msg_type == "ATTITUDE":
                     self.handle_attitude(msg)
+
                 elif msg_type == "SYS_STATUS":
                     self.handle_sys_status(msg)
+
                 else:
                     pprint.pprint(msg.to_dict())
 
                 print("\n*****************")
             time.sleep(0.2)
-
-
 
 class CompanionComputer:
     '''
@@ -645,10 +728,12 @@ def demo2(drone, raspi):
     #raspi.check_internet('https://bing.com')
     raspi.check_wifi()
 
+
 # Read all messages and display the info
 def demo3(drone, raspi):
     raspi.output("[INFO] Demo 3")
-    drone.read_messages()
+    drone.request_all_msgs(4)
+    drone.read_messages_old()
 
 
 def main():
