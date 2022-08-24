@@ -96,6 +96,8 @@ def catch_ashes():
         print("New state: " + curr_state.name)
         time.sleep(0.5)
 
+    print("Finished catch_ashes")
+    
 
 if __name__ == '__main__':
 	catch_ashes()
