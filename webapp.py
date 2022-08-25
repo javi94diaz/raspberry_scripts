@@ -1,8 +1,6 @@
 # Flask server for the website
 from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
-from pymavlink import mavutil
-import os
 from javikit import *
 
 app = Flask (__name__)
@@ -33,14 +31,26 @@ def upload_static_file():
 
 @app.route('/pre_flight_checks')
 def pre_flight_checks():
+
+    ## From the checklist
+    # battery level
+    # connection with GCS
+    # telemetry link
+    # airspeed
+    # servo check, arm servos (for surfaces), check controls 
+    # 
+
     
     print("pre flight checks button pressed")
     print("Current mode: " + drone.get_mode())
     drone.set_mode('STABILIZE')
 
-    voltage_battery = drone.read_next_msg("SYS_STATUS", "voltage_battery")
-    print("voltage_battery: ", end='')
-    print(voltage_battery)
+    [voltage_battery] = drone.read_message("SYS_STATUS", "voltage_battery")
+    print("voltage_battery: {}".format(voltage_battery))
+
+    print( drone.read_message("VFR_HUD", "airspeed", "climb", "alt", "groundspeed") )
+
+    #print( drone.read_message("HEARTBEAT", "mode", "is_enabled") )
 
     return "Nothing"
 
