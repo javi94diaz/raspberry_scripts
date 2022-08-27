@@ -19,7 +19,7 @@
 #   mensaje MAV_CMD_NAV_TAKEOFF y MAV_CMD_NAV_VTOL_TAKEOFF
 
 # The script do_stuff.py is running, performing the actions programmed - DONE
-# The script record_data.py is collecting information to show after landing
+# The script record_data.py is collecting information and writing it into a JSON file
 
 # Land
 #   mensaje MAV_CMD_NAV_VTOL_LAND

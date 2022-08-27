@@ -540,8 +540,8 @@ class Vehicle:
                 print("No message")
             else:
                 msg_type = msg.get_type()
-                print("Message " + msg_type)
-                print("Req_type " + req_type)
+                #print("Message " + msg_type)
+                #print("Req_type " + req_type)
 
                 if msg_type == "BAD_DATA":
                     if mavutil.all_printable(msg.data):
@@ -578,7 +578,7 @@ class Vehicle:
                     #pprint.pprint(msg.to_dict())
                     pass
 
-            print("\n*****************")
+            #print("\n*****************")
             time.sleep(0.1)
                 
             

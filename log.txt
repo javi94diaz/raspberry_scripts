@@ -323,3 +323,9 @@
 *** LOGFILE: log.txt - 25/08/22 14:11:26 ***
 [OK] Connected
 [INFO] Demo 3
+
+*** LOGFILE: log.txt - 26/08/22 15:50:02 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 26/08/22 15:46:53 ***
+[OK] Connected

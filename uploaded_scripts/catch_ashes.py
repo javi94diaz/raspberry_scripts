@@ -11,6 +11,7 @@ from itertools import count
 import os
 import sys
 import time
+import json
 sys.path.append(os.path.abspath("/home/pi/raspberry_scripts"))
 from javikit import *
 
@@ -56,36 +57,40 @@ def catch_ashes():
     print("Initial state: " + curr_state.name)
 
     countdown(5)
-    
-    for i in range(0,50):
+
+    data = {}
+    voltage_battery = []
+    yaw = []
+
+    for i in range(0,10):
         
         print("///////////////////////")
         print("Loop count: " + str(i))
 
         # Read values from messages
-
-        #voltage_battery = drone.read_messages("SYS_STATUS", "voltage_battery")
-        voltage_battery = drone.read_next_msg("SYS_STATUS", "voltage_battery")
-        print("voltage_battery battery: ", end='')
-        print(voltage_battery)
+        [curr_volt] = drone.read_message("SYS_STATUS", "voltage_battery")
+        print("curr_volt: {}".format(curr_volt))
         
-        yaw = drone.read_next_msg("ATTITUDE", "yaw")
-        print("yaw: ", end='')
-        print(yaw)
+        [curr_yaw] = drone.read_message("ATTITUDE", "yaw")
+        print("curr_yaw: {}".format(curr_yaw))
 
-        curr_countdown = 10 - i
+        # Save values to lists
+        voltage_battery.append(curr_volt)
+        yaw.append(curr_yaw)
 
-        if i == 40:
-            voltage_battery = -401
+        curr_countdown = 5 - i
+
+        if i == 7:
+            curr_volt = -401
 
         # Determine current state
         print("Current state: " + curr_state.name)
 
-        if voltage_battery <= -400 and curr_state.name != "LOW_BATTERY":
+        if curr_volt <= -400 and curr_state.name != "LOW_BATTERY":
             curr_state = state2
             curr_state.on_change()
 
-        elif yaw <= 300 and curr_state.name == "NORMAL":
+        elif curr_yaw <= 300 and curr_state.name == "NORMAL":
             curr_state = state3
             curr_state.on_change()
 
@@ -98,6 +103,23 @@ def catch_ashes():
 
     print("Finished catch_ashes")
     
+    # Saving lists to dictionary
+    xValues = list(range(1,11))
+    data["xValues"] = xValues
+    
+    data['voltage_battery'] = voltage_battery
+    data['yaw'] = yaw
+
+
+    
+    # Saving dictionary to JSON file
+    print("Writing data to file...")
+
+    with open('saved_data/data.json', 'w') as fp:
+        json.dump(data, fp)
+
+    print("Data saved!")
+
 
 if __name__ == '__main__':
 	catch_ashes()

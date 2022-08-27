@@ -38,16 +38,15 @@ def pre_flight_checks():
     # telemetry link
     # airspeed
     # servo check, arm servos (for surfaces), check controls 
-    # 
 
-    
     print("pre flight checks button pressed")
     print("Current mode: " + drone.get_mode())
     drone.set_mode('STABILIZE')
 
     [voltage_battery] = drone.read_message("SYS_STATUS", "voltage_battery")
-    print("voltage_battery: {}".format(voltage_battery))
+    print("\nPREFLIGHT voltage_battery: {}".format(voltage_battery))
 
+    print("airspeed, climb, alt, groundspeed:")
     print( drone.read_message("VFR_HUD", "airspeed", "climb", "alt", "groundspeed") )
 
     #print( drone.read_message("HEARTBEAT", "mode", "is_enabled") )
@@ -61,7 +60,6 @@ def arm():
     raspi.output('[OK] Armed succesfully')
     raspi.set_wifi("down")
     countdown(2)
-    #os.system("catch_ashes.py")
     from uploaded_scripts.catch_ashes import catch_ashes
     catch_ashes()
     return "Nothing"
