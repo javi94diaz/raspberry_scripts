@@ -3,19 +3,12 @@
 <head>
 
     <title>Flight checks website</title>
-
     <meta charset="UTF-8">  
-    <link rel="stylesheet" type="text/css" media="screen" href="../static/main.css">
-
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../static/main.css">
    
-    <script
-        src="https://code.jquery.com/jquery-3.2.1.js">
-    </script>
-
+    <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-
-    <script type="text/javascript" src="raspberry_scripts/saved_data/data.json"></script>
 
     <!-- PRE-FLIGHT CHECKS BUTTON ACTION -->
     <script type=text/javascript> 
@@ -30,7 +23,7 @@
                 return false;
             });
         }); 
-    
+
     </script> 
 
     <!-- ARM BUTTON ACTION -->
@@ -65,11 +58,63 @@
         
     </script>
 
+    <!-- LOAD JSON FILE -->
+    <script type=text/javascript>
+    
+        console.log("vamos a ver si carga el json")
+
+        $(document).ready(function(){
+            $("p").click(function(){
+                //$(this).hide();
+
+                console.log("p clicked")
+
+                $.getJSON("/saved_data/data.json", function(json) {
+                console.log(json);
+                });
+            });
+        });
+
+    </script>
+
 </head>
 
 <body>
     
-    <h4>Flight checks website</h4>
+    <h4>Raspberry Pi website</h4>
+    
+
+
+<!-- ************ ZONA DE PRUEBAS ************ -->
+
+<script type="text/javascript">
+    function requestFile()
+    {
+    const xhttp = new XMLHttpRequest();
+    
+    xhttp.onload = function() {
+        if (xhttp.status == 200) {
+            console.log(xhttp.response)
+        } else {
+            console.log("Error occurred");
+        }
+        };
+    console.log("Requesting file!")
+    xhttp.open("GET", "/patata", true);
+    xhttp.send();
+
+}
+</script>
+
+<div id="buttonforjson">
+    <h2>Let AJAX change this text</h2>
+    <button type="button" onclick="requestFile()">Request File</button>
+</div>
+
+<!-- ************ ZONA DE PRUEBAS ************ -->
+
+
+
 
     <!-- Pre-flight checks button -->
     <div class='container'>
@@ -129,19 +174,12 @@
     </div>
     <br>
 
-    <!-- Show data button -->
-    <!--
 
 
-        <div class='container'>
-            <h3>Show data</h3>
-            <form>
-                <input type = "button" id = "show_data" value = "Show data" onclick="show_graphic()"/>
-            </form>
-        </div>
-    -->
 
-    <!-- Show data button Action-->
+
+
+
  
     <!-- Chart for data -->
     <canvas id="myChart" style="max-width:600px;border:1px solid #000000;"></canvas>
@@ -149,25 +187,27 @@
     <!-- Chart functionality script -->
     <script>
         
-    
-    var mydata = JSON.parse(data);
+    var mydata = JSON.parse('{"1": 1, "2": 2,"3": {"4": 4, "5": {"6": 6}}}');
     console.log(mydata)
+ 
 
     var c = document.getElementById("myChart");
     var ctx = c.getContext("2d");
-    //var xValues = [50,60,70,80,90,100,110,120,130,140,150];
-    var yValues = [7,8,8,9,9,9,10,11,14,14];//,15];
+    var xValues = [50,60,70,80,90,100,110,120,130,140,150];
+    var yValues = [7,8,8,9,9,9,10,11,14,14,15];
+    
     /*
     var yValues = [];
 
     for (var i = 1; i <= 10; i++) {
         yValues.push(i);
     }
-*/
+    */
+
     new Chart(ctx, {
         type: "line",
         data: {
-            labels: mydata.xValues,
+            labels: xValues,
             datasets: [{
             fill: false,
             lineTension: 0,

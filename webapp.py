@@ -1,10 +1,10 @@
 # Flask server for the website
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_from_directory
 from flask_cors import CORS
 from javikit import *
 
 app = Flask (__name__)
-#CORS(app)
+cors = CORS(app)
 
 
 # @app.route('/')
@@ -27,6 +27,26 @@ def upload_static_file():
     f.save("uploaded_scripts/" + f.filename)
     resp = {"success": True, "response": "file saved!"}
     return jsonify(resp), 200
+
+
+@app.route('/patata')
+def patata():
+    print("patata")
+    response = send_from_directory(directory='saved_data', filename='data.json')
+    return response
+
+# @app.route('/send_file', methods=['GET', 'POST'])
+# def send_file():
+    
+#     print("vamos a enviar el puto fichero")
+
+#     print(request.files)
+
+#     f = open("/saved_data/data.json", "r")
+    
+#     req = requests.post(data={})
+#     resp = {"success": True, "response": "file saved!"}
+#     return jsonify(resp), 200
 
 
 @app.route('/pre_flight_checks')
@@ -63,6 +83,7 @@ def arm():
     from uploaded_scripts.catch_ashes import catch_ashes
     catch_ashes()
     return "Nothing"
+    
 
 
 @app.route('/disarm')
