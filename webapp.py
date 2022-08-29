@@ -88,6 +88,7 @@ def disarm():
 if __name__ == '__main__':
     drone = Vehicle()
     raspi = CompanionComputer()
+    drone.output("[INFO] Waiting to connect to autopilot...")
     drone.connect('/dev/ttyAMA0', 921600)
     raspi.output("[OK] Connected")
     drone.request_all_msgs(4)
