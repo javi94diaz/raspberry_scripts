@@ -29,24 +29,11 @@ def upload_static_file():
     return jsonify(resp), 200
 
 
-@app.route('/patata')
+@app.route('/request_data')
 def patata():
-    print("patata")
+    print("request_data")
     response = send_from_directory(directory='saved_data', filename='data.json')
     return response
-
-# @app.route('/send_file', methods=['GET', 'POST'])
-# def send_file():
-    
-#     print("vamos a enviar el puto fichero")
-
-#     print(request.files)
-
-#     f = open("/saved_data/data.json", "r")
-    
-#     req = requests.post(data={})
-#     resp = {"success": True, "response": "file saved!"}
-#     return jsonify(resp), 200
 
 
 @app.route('/pre_flight_checks')

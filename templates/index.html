@@ -9,11 +9,13 @@
     <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    
+    <script type="text/javascript" src="../static/app.js"></script>
 
     <!-- PRE-FLIGHT CHECKS BUTTON ACTION -->
     <script type=text/javascript> 
         
-        $(function() {
+        $(function () {
             $("#pre_flight_button").click(function (event) {
                 $.getJSON('/pre_flight_checks',
                 { },
@@ -58,64 +60,12 @@
         
     </script>
 
-    <!-- LOAD JSON FILE -->
-    <script type=text/javascript>
-    
-        console.log("vamos a ver si carga el json")
-
-        $(document).ready(function(){
-            $("p").click(function(){
-                //$(this).hide();
-
-                console.log("p clicked")
-
-                $.getJSON("/saved_data/data.json", function(json) {
-                console.log(json);
-                });
-            });
-        });
-
-    </script>
-
 </head>
 
 <body>
     
     <h4>Raspberry Pi website</h4>
     
-
-
-<!-- ************ ZONA DE PRUEBAS ************ -->
-
-<script type="text/javascript">
-    function requestFile()
-    {
-    const xhttp = new XMLHttpRequest();
-    
-    xhttp.onload = function() {
-        if (xhttp.status == 200) {
-            console.log(xhttp.response)
-        } else {
-            console.log("Error occurred");
-        }
-        };
-    console.log("Requesting file!")
-    xhttp.open("GET", "/patata", true);
-    xhttp.send();
-
-}
-</script>
-
-<div id="buttonforjson">
-    <h2>Let AJAX change this text</h2>
-    <button type="button" onclick="requestFile()">Request File</button>
-</div>
-
-<!-- ************ ZONA DE PRUEBAS ************ -->
-
-
-
-
     <!-- Pre-flight checks button -->
     <div class='container'>
         <h3>Pre-flight checks</h3>
@@ -172,14 +122,14 @@
         <div id="static_file_response"> </div>
 
     </div>
+
+    <!-- Load data.json button-->
+    <div id="request_file_div">
+        <h2>Request File</h2>
+        <button type="button" onclick="requestFile()">Request File</button>
+    </div>
+
     <br>
-
-
-
-
-
-
-
  
     <!-- Chart for data -->
     <canvas id="myChart" style="max-width:600px;border:1px solid #000000;"></canvas>
@@ -187,8 +137,8 @@
     <!-- Chart functionality script -->
     <script>
         
-    var mydata = JSON.parse('{"1": 1, "2": 2,"3": {"4": 4, "5": {"6": 6}}}');
-    console.log(mydata)
+    //var mydata = JSON.parse('{"1": 1, "2": 2,"3": {"4": 4, "5": {"6": 6}}}');
+    //console.log(mydata)
  
 
     var c = document.getElementById("myChart");
