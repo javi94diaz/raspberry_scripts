@@ -54,7 +54,7 @@ class Vehicle:
     autopilot (messages, flightmode, arming and more).
     '''
 
-    modelist = [
+    modelist_copter = [
         'STABILIZE', 'ACRO', 'ALT_HOLD', 'AUTO', 
         'GUIDED', 'LOITER', 'RTL', 'CIRCLE', 
         'POSITION', 'LAND', 'OF_LOITER', 'DRIFT', 
@@ -63,14 +63,53 @@ class Vehicle:
         'SMART_RTL', 'FLOWHOLD', 'FOLLOW', 'ZIGZAG', 
         'SYSTEMID', 'AUTOROTATE', 'AUTO_RTL'
         ]
+
+    modelist_plane = [
+        'MANUAL', 'CIRCLE', 'STABILIZE', 'TRAINING', 
+        'ACRO', 'FBWA', 'FBWB', 'CRUISE', 
+        'AUTOTUNE','no_mode','AUTO', 'RTL', 'LOITER', 
+        'TAKEOFF', 'AVOID_ADSB', 'GUIDED', 'INITIALISING', 
+        'QSTABILIZE', 'QHOVER', 'QLOITER', 'QLAND', 
+        'QRTL', 'QAUTOTUNE', 'QACRO', 'THERMAL', 
+        'LOITERALTQLAND'
+        ]
+
+    mode_map_plane = {
+        'MANUAL': 0, 
+        'CIRCLE': 1, 
+        'STABILIZE': 2, 
+        'TRAINING': 3, 
+        'ACRO': 4, 
+        'FBWA': 5, 
+        'FBWB': 6, 
+        'CRUISE': 7, 
+        'AUTOTUNE': 8, 
+        'AUTO': 10, 
+        'RTL': 11, 
+        'LOITER': 12, 
+        'TAKEOFF': 13, 
+        'AVOID_ADSB': 14, 
+        'GUIDED': 15, 
+        'INITIALISING': 16, 
+        'QSTABILIZE': 17, 
+        'QHOVER': 18, 
+        'QLOITER': 19, 
+        'QLAND': 20, 
+        'QRTL': 21, 
+        'QAUTOTUNE': 22, 
+        'QACRO': 23, 
+        'THERMAL': 24, 
+        'LOITERALTQLAND': 25
+    }
+
     
 
     def __init__(self):
         self.mode = "default"
         self.master = None
 
-
-    def connect(self, connection_string='/dev/ttyAMA0', baudrate=921600):
+    #connection_string='/dev/ttyAMA0', baudrate=921600
+    def connect(self, connection_string, baudrate):
         '''
         Connect to the autopilot
         Returns a mavutil connection object to handle all methods in the vehicle
@@ -87,7 +126,7 @@ class Vehicle:
             self.master = mavutil.mavlink_connection(connection_string, baudrate)
             #print("Waiting to connect...")
             self.master.wait_heartbeat()
-            #print("[OK] Connected")
+            print("[OK] Connected")
         except:
             print("[ERROR] Connection not established")
 
@@ -133,7 +172,8 @@ class Vehicle:
                 print(e)
             time.sleep(0.1)
 
-        self.mode =  self.modelist[mode_num]
+        #self.mode =  self.modelist_copter[mode_num]
+        self.mode =  self.modelist_plane[mode_num]
         return self.mode
 
 
@@ -157,6 +197,13 @@ class Vehicle:
         mode = mode.upper()
         
         # Check if given mode is valid
+        # if mode not in self.modelist_plane:
+        #     print('Unknown mode : {}'.format(mode))
+        #     sys.exit(1)
+
+        print("Current mode list: ")
+        print(self.master.mode_mapping())
+
         if mode not in self.master.mode_mapping():
             print('Unknown mode : {}'.format(mode))
             print('Try:', list(self.master.mode_mapping().keys()))
@@ -734,10 +781,10 @@ class CompanionComputer:
             self.output("[INFO] Internet not available")
             return False
 
-
-# Get mode, set mode, move servo
+# Get mode and set mode
 def demo1(drone, raspi):
-    raspi.output("[INFO] Demo 1")
+
+    raspi.output("[INFO] Demo 1 - get/set mode")
 
     print("Initial mode: " + drone.get_mode())
     newmode = input("Introduce the new mode: ")
@@ -746,14 +793,23 @@ def demo1(drone, raspi):
     drone.set_mode(newmode)
     raspi.output("[OK] Mode set to " + newmode)
 
+# Move servo
+def demo2(drone, raspi):
+    raspi.output("[INFO] Demo 2 - move servo")
+
+    num = int(input("Introduce the servo number: "))
     pos = int(input("Introduce the servo position: "))
-    drone.move_servo(10, pos)
+    drone.move_servo(num, pos)
     raspi.output("[OK] Servo position set")
+
+    #ACTUATOR_OUTPUT_FUNCTION_SERVO6
+
+    #MAV_CMD_DO_SET_ACTUATOR 
 
 
 # Arm, turn Wi-Fi off, wait, disarm, turn Wi-Fi on
-def demo2(drone, raspi):
-    raspi.output("[INFO] Demo 2")
+def demo3(drone, raspi):
+    raspi.output("[INFO] Demo 3 - arm/disarm, Wi-Fi on/off")
 
     drone.arm()
     raspi.set_wifi("down")
@@ -775,15 +831,15 @@ def demo2(drone, raspi):
 
 
 # Read all messages and display the info
-def demo3(drone, raspi):
-    raspi.output("[INFO] Demo 3")
+def demo4(drone, raspi):
+    raspi.output("[INFO] Demo 4 - read all messages")
     drone.request_all_msgs(4)
     drone.read_all_messages()
 
 # Request certain properties of message of the desired type
-def demo4(drone, raspi):
+def demo5(drone, raspi):
 
-    raspi.output("[INFO] Demo 4")
+    raspi.output("[INFO] Demo 5 - request properties")
     drone.request_all_msgs(4)
     print( drone.read_message("HEARTBEAT", "mode", "is_enabled") )
     countdown(2)
@@ -801,12 +857,13 @@ def main():
     print("Main function " + get_datetime())
     drone = Vehicle()
     raspi = CompanionComputer()
+    drone.connect('/dev/ttyAMA0', 57600)
+    #raspi.output("[OK] Connected")
 
-    drone.connect('/dev/ttyAMA0', 921600)
-    raspi.output("[OK] Connected")
-    
-    n = input("Demo number?: ")
-    
+    print("Demo number?: ")
+    print("1: Get/Set mode\n2: Move servo\n3: Arm/Disarm, Wi-Fi On/Off")
+    print("4: read messages\n5: request properties")
+    n = input()
     eval("demo" + n + "(drone, raspi)")
 
 if __name__ == '__main__':

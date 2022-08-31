@@ -380,3 +380,79 @@
 
 *** LOGFILE: log.txt - 29/08/22 15:59:13 ***
 [OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:10:54 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:28:22 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:29:02 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:29:16 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:31:11 ***
+[OK] Connected
+[INFO] Demo 3
+
+*** LOGFILE: log.txt - 31/08/22 16:34:09 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:34:42 ***
+[OK] Connected
+
+*** LOGFILE: log.txt - 31/08/22 16:35:47 ***
+[OK] Connected
+[INFO] Demo 1
+
+*** LOGFILE: log.txt - 31/08/22 17:08:29 ***
+[OK] Connected
+[INFO] Demo 1
+
+*** LOGFILE: log.txt - 31/08/22 17:11:01 ***
+[INFO] Demo 1
+[OK] Mode set to auto
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 31/08/22 17:17:53 ***
+[INFO] Demo 1
+[OK] Mode set to auto
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 31/08/22 17:24:27 ***
+[INFO] Demo 1
+
+*** LOGFILE: log.txt - 31/08/22 17:25:52 ***
+[INFO] Demo 1
+[OK] Mode set to manual
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 31/08/22 17:56:51 ***
+[INFO] Demo 1 - get/set mode
+[OK] Mode set to loiter
+
+*** LOGFILE: log.txt - 31/08/22 17:57:25 ***
+[INFO] Demo 1 - get/set mode
+[OK] Mode set to manual
+
+*** LOGFILE: log.txt - 31/08/22 17:57:39 ***
+[INFO] Demo 1 - get/set mode
+[OK] Mode set to auto
+
+*** LOGFILE: log.txt - 31/08/22 17:57:52 ***
+[INFO] Demo 1 - get/set mode
+[OK] Mode set to fbwa
+
+*** LOGFILE: log.txt - 31/08/22 17:58:34 ***
+[INFO] Demo 1 - get/set mode
+[OK] Mode set to manual
+
+*** LOGFILE: log.txt - 31/08/22 17:59:23 ***
+[INFO] Demo 2 - move servo
+[OK] Servo position set
+
+*** LOGFILE: log.txt - 31/08/22 17:59:41 ***
+[INFO] Demo 2 - move servo
+[OK] Servo position set

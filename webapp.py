@@ -89,7 +89,7 @@ if __name__ == '__main__':
     drone = Vehicle()
     raspi = CompanionComputer()
     drone.output("[INFO] Waiting to connect to autopilot...")
-    drone.connect('/dev/ttyAMA0', 921600)
+    drone.connect('/dev/ttyAMA1', 57600)
     raspi.output("[OK] Connected")
     drone.request_all_msgs(4)
     app.run(debug=True, host='0.0.0.0')
