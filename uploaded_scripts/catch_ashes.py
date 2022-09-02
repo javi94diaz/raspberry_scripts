@@ -48,6 +48,7 @@ def catch_ashes(drone, raspi):
     data = {
         'xValues': list(range(1,11)),
         'voltage_battery': [],
+        'battery_remaining': [], #percentage
         'airspeed': [],
         'climb': [],
         'alt': [],
@@ -61,11 +62,12 @@ def catch_ashes(drone, raspi):
     for i in range(0, end):
         
         print("///////////////////////")
-        print("Loop count: " + str(i))
-
+        raspi.output("Loop count: " + str(i))
+        
         # Read values from messages
-        [curr_voltage] = drone.read_message("SYS_STATUS", "battery_remaining")
+        [curr_voltage, curr_battery] = drone.read_message("SYS_STATUS", "voltage_battery", "battery_remaining")
         raspi.output("[INFO] voltage_battery: {}".format(curr_voltage))
+        raspi.output("[INFO] battery_remaining: {}".format(curr_battery))
 
         [curr_airspeed, curr_climb, curr_alt, curr_groundspeed] = drone.read_message("VFR_HUD", "airspeed", "climb", "alt", "groundspeed")
         raspi.output("[INFO] airspeed: {}".format(curr_airspeed))
@@ -82,6 +84,7 @@ def catch_ashes(drone, raspi):
 
         # Save values to dictionary
         data['voltage_battery'].append(curr_voltage)
+        data['battery_remaining'].append(curr_battery)
         data['airspeed'].append(curr_airspeed)
         data['climb'].append(curr_climb)
         data['alt'].append(curr_alt)

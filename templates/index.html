@@ -83,10 +83,123 @@
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function() {
                 if (xhttp.status == 200) {
-                    //console.log(xhttp.response)
-                    var datos = xhttp.response
-                    console.log("Printed data")
-                    console.log(datos.xValues)           
+
+                    // printing data
+                    console.log("Printing data");
+                    var datos = xhttp.response;
+                    console.log(datos);
+
+                    datos_json = JSON.parse(datos);
+                    console.log("Printed data");
+
+                    // try to loop over json object
+                    // que los limites del grafico en la vertical dependan del valor minimo y maximo de la variable
+
+                    console.log("Looping data_json object");
+
+                    for (const property in datos_json) {
+                        console.log(`${property}: ${datos_json[property]}`);
+                        
+                        if (property == "xValues")
+                        {
+                            continue;
+                        }
+
+                        // Create a space
+                        const br_space = document.createElement("br");
+
+                        // Create a new canvas
+                        var new_canvas = document.createElement("canvas");
+                        new_canvas.setAttribute("id", property);
+                        new_canvas.setAttribute("style", "max-width:600px;border:1px solid #000000;" );
+                        
+                        // Insert the new canvas in the DOM
+                        const graphics = document.getElementById("graphics");
+                        graphics.appendChild(br_space)
+                        graphics.appendChild(new_canvas);
+
+                        // Create a chart and plot the data
+                        var new_chart = document.getElementById(property);
+                        var ctx = new_chart.getContext("2d");
+                        
+                        // Find the max and min value to set appropriate ticks of the chart
+                        var max_value = Math.max(...datos_json[property]);
+                        var min_value = Math.min(...datos_json[property])
+                        
+                        console.log("MAX value:")
+                        console.log(max_value)
+                        console.log("MIN value:")
+                        console.log(min_value)
+
+                        // Calculate the order of magnitude of the max and min values
+                        // Example 1: 97 is order of magnitude 1 ---> 97 = 9x10^1 + ..etc
+                        // Example 2: 52548 is order of magnitude 4 ---> 52548 = 5x10^4 + ...etc
+                        console.log("Magnitude of MAX value: ")
+                        var max_log10 = Math.log10(Math.abs(max_value))
+                        var magnitudeMAX = Math.floor(max_log10)
+                        console.log(magnitudeMAX)
+
+                        console.log("Magnitude of MIN value: ")
+                        var min_log10 = Math.log10(Math.abs(min_value))
+                        var magnitudeMIN = Math.floor(min_log10)
+                        console.log(magnitudeMIN)
+
+                        // Setting superior and inferior limits for the plot
+                        if (magnitudeMAX != -Infinity && magnitudeMAX != 0 && magnitudeMIN != Infinity)
+                        {
+                            if (magnitudeMAX < 0){
+                                var max_tick = max_value - 10*magnitudeMAX/4;
+                            }
+                            else{
+                                var max_tick = max_value + 10*magnitudeMAX/4;
+                            }
+                        }
+                        else
+                        {
+                            var max_tick = max_value + 1
+                        }
+                        console.log("max_tick: ")
+                        console.log(max_tick)
+
+                        if (magnitudeMIN != -Infinity && magnitudeMIN != 0 && magnitudeMIN != Infinity)
+                        {
+                            if (magnitudeMIN < 0){
+                                var min_tick = min_value + 10*magnitudeMIN/4;
+                            }
+                            else{
+                                var min_tick = min_value - 10*magnitudeMIN/4;
+                            }
+                        }
+                        else
+                        {
+                            var min_tick= min_value - 1
+                        }
+                        console.log("min_tick: ")
+                        console.log(min_tick)
+
+                        new Chart(ctx, {
+                            type: "line",
+                            data: {
+                                labels: datos_json['xValues'],
+                                datasets: [{
+                                fill: false,
+                                lineTension: 0,
+                                backgroundColor: "rgba(0,0,255,1.0)",
+                                borderColor: "rgba(0,0,255,0.1)",
+                                label: property,
+                                data: datos_json[property]
+                                }]
+                            },
+                            options: {
+                                legend: {display: true},
+                                scales: {
+                                yAxes: [{ticks: {min: min_tick, max: max_tick }}],
+                                }
+                            }
+                        });
+                    }
+                    
+                    console.log("Finished plotting data")
 
                 } else {
                     console.log("Error occurred");
@@ -95,8 +208,6 @@
             console.log("Requesting file!")
             xhttp.open("GET", "/request_data", true);
             xhttp.send();
-
-            //console.log(xhttp.response)
         }
     </script>
 
@@ -130,8 +241,6 @@
             </form>
     </div>
 
-
-
     <!-- Upload a file button -->
     <div type="container">
         <h3>Upload a Python file</h3>
@@ -145,53 +254,84 @@
 
     <!-- Load data.json button-->
     <div id="request_file_div">
-        <h2>Request File</h2>
-        <button type="button" onclick="requestFile()">Request File</button>
+        <h2>Plot data</h2>
+        <button type="button" onclick="requestFile()">Plot data</button>
     </div>
+
+
+    <script>
+        function clearGraphics()
+        {
+            
+            // Delete current div "graphics" under div "container_graphics"
+            var container_graphics = document.getElementById("container_graphics");
+            var graphics = document.getElementById("graphics");
+            container_graphics.removeChild(graphics);
+                                    
+            // Create a new empty div "graphics" under the same parent
+            graphics = document.createElement("div");
+            graphics.setAttribute("id", "graphics");
+
+            container_graphics.appendChild(graphics)
+        }
+
+    </script>
+
+    <br>
+    
+    <!-- Clear graphics-->
+    <div id="clear_graphics">
+        <button type="button" onclick="clearGraphics()">Clear plots</button>
+    </div>
+
 
     <br>
  
-    <!-- Chart for data -->
-    <canvas id="myChart" style="max-width:600px;border:1px solid #000000;"></canvas>
+    <!-- Charts for data -->
+    <div id="container_graphics">
+
+        <div id="graphics">
+            <!--
+                <canvas id="myChart" style="max-width:600px;border:1px solid #000000;"></canvas>
+            -->
+    
+        </div>
+
+    </div>
 
     <!-- Chart functionality script -->
-    <script>
+    <!--
+
+        <script>
+            
+            var c = document.getElementById("myChart");
+            var ctx = c.getContext("2d");
+            var xValues = [50,60,70,80,90,100,110,120,130,140,150];
+            var yValues = [7,8,8,9,9,9,10,11,14,14,15];
+            
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        fill: false,
+                        lineTension: 0,
+                        backgroundColor: "rgba(0,0,255,1.0)",
+                        borderColor: "rgba(0,0,255,0.1)",
+                        label: "Sample data",
+                        data: yValues
+                    }]
+                },
+                options: {
+                    legend: {display: true},
+                    scales: {
+                        yAxes: [{ticks: {min: 6, max:16}}],
+                    }
+                }
+            });
     
-    var c = document.getElementById("myChart");
-    var ctx = c.getContext("2d");
-    var xValues = [50,60,70,80,90,100,110,120,130,140,150];
-    var yValues = [7,8,8,9,9,9,10,11,14,14,15];
-    
-    /*
-    var yValues = [];
-
-    for (var i = 1; i <= 10; i++) {
-        yValues.push(i);
-    }
-    */
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: xValues,
-            datasets: [{
-            fill: false,
-            lineTension: 0,
-            backgroundColor: "rgba(0,0,255,1.0)",
-            borderColor: "rgba(0,0,255,0.1)",
-            label: "Interesting flight data",
-            data: yValues
-            }]
-        },
-        options: {
-            legend: {display: true},
-            scales: {
-            yAxes: [{ticks: {min: 6, max:16}}],
-            }
-        }
-    });
-
-    </script>
+        </script>
+    -->
 
 </body>
 </html>
