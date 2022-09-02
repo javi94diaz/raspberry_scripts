@@ -16,10 +16,28 @@
     <script type=text/javascript> 
         $(function () {
             $("#pre_flight_button").click(function (event) {
-                $.getJSON('/pre_flight_checks',
-                { },
-                function(data) {
+                
+                console.log("Executing pre-flight checks...");
+                var theOutput = document.getElementById("all_checks_output")
+                theOutput.innerHTML = "Executing pre-flight checks...";
 
+                $.getJSON('/pre_flight_checks',
+                { 
+                    
+                },
+                function(data) {
+                    console.log("Preflight checks Output data: ")
+                    console.log(data)
+
+                    var theOutput = document.getElementById("all_checks_output")
+                    if (data['all_checks'])
+                    {
+                        theOutput.innerHTML = "[OK] Pre-flight checks success";
+                    }
+                    else
+                    {
+                        theOutput.innerHTML = "[ERROR] Pre-flight checks failed";
+                    }
                 }); 
                 return false;
             });
@@ -34,6 +52,20 @@
                 { },
                 function(data) {
 
+                    console.log("Arm output data: ")
+                    console.log(data)
+
+                    var theOutput = document.getElementById("arm_output")
+                    if (data['ret'])
+                    {
+                        theOutput.innerHTML = "[OK] Script finished";
+                        console.log("[OK] Script finished")
+                    }
+                    else
+                    {
+                        theOutput.innerHTML = "[ERROR] Script not executed";
+                        console.log("[ERROR] Script not executed")
+                    }
                 }); 
                 return false;
             });
@@ -223,21 +255,24 @@
             <form>
                 <input type = "button" id = "pre_flight_button" value = "Pre-flight checks" />
             </form>
+            <p id="all_checks_output"></p>
     </div>
 
     <!-- Arm button -->
     <div class='container'>
         <h3>Arm</h3>
             <form>
-                <input type = "button" id = "arm_button" value = "Arm and turn off Wi-Fi" />
+                <input type = "button" id = "arm_button" value = "Arm and execute script" />
             </form>
+            <p id="arm_output"></p>
+            
     </div>
 
     <!-- Disarm button -->
     <div class='container'>
         <h3>Disarm</h3>
             <form>
-                <a href=# id=disarm_button><button class='btn btn-default'>Disarm and turn on Wi-Fi</button></a>
+                <a href=# id=disarm_button><button class='btn btn-default'>Disarm and Wi-Fi ON</button></a>
             </form>
     </div>
 
@@ -248,7 +283,7 @@
             <input id="file" type="file" name="static_file" accept=".py"/>
             <button id="upload-button" onclick="uploadFile(this.form)"> Upload </button>
         </form>
-        <div id="static_file_response"> </div>
+        <div id="static_file_response"></div>
 
     </div>
 
