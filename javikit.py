@@ -109,7 +109,7 @@ class Vehicle:
         self.master = None
 
     #connection_string='/dev/ttyAMA0', baudrate=921600
-    def connect(self, connection_string, baudrate):
+    def connect(self, connection_string, baudrate=57600):
         '''
         Connect to the autopilot
         Returns a mavutil connection object to handle all methods in the vehicle
@@ -123,8 +123,9 @@ class Vehicle:
             [OK] Connected
         '''
         try:
+
             self.master = mavutil.mavlink_connection(connection_string, baudrate)
-            #print("Waiting to connect...")
+            print("Waiting to connect...")
             self.master.wait_heartbeat()
             print("[OK] Connected")
         except:
@@ -852,17 +853,46 @@ def demo5(drone, raspi):
     print( drone.read_message("SYS_STATUS", "battery_remaining", "current_battery") )
     countdown(2)
 
+def demo6(drone, raspi):
+
+    raspi.output("[INFO] Demo 6 - get specific messages")
+
+    while(True):
+        [voltage_battery] = drone.read_message("SYS_STATUS", "voltage_battery")
+        
+        raspi.output("[INFO] voltage_battery: {}".format(voltage_battery))
+
+        [airspeed, climb, alt, groundspeed] = drone.read_message("VFR_HUD", "airspeed", "climb", "alt", "groundspeed")
+
+        raspi.output("[INFO] airspeed: {}".format(airspeed))
+        raspi.output("[INFO] climb: {}".format(climb))
+        raspi.output("[INFO] alt: {}".format(alt))
+        raspi.output("[INFO] groundspeed: {}".format(groundspeed))
+        raspi.output("**********")
+        
+        time.sleep(1)
+
+def demo7(drone, raspi):
+
+    from uploaded_scripts.catch_ashes import catch_ashes
+    catch_ashes(drone, raspi)
 
 def main():
     print("Main function " + get_datetime())
     drone = Vehicle()
     raspi = CompanionComputer()
-    drone.connect('/dev/ttyAMA0', 57600)
-    #raspi.output("[OK] Connected")
+    
+    raspi.output("Waiting to connect...")
 
+    # Over USB cable
+    #drone.connect('/dev/ttyAMA0', 921600)
+
+    # Over telemetry
+    drone.connect('/dev/ttyAMA0', 57600)
+        
     print("Demo number?: ")
     print("1: Get/Set mode\n2: Move servo\n3: Arm/Disarm, Wi-Fi On/Off")
-    print("4: read messages\n5: request properties")
+    print("4: read messages\n5: request properties\n6: read specific messages")
     n = input()
     eval("demo" + n + "(drone, raspi)")
 

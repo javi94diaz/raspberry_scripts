@@ -48,7 +48,7 @@ def pre_flight_checks():
 
     print("pre flight checks button pressed")
     print("Current mode: " + drone.get_mode())
-    drone.set_mode('STABILIZE')
+    drone.set_mode('MANUAL')
 
     [voltage_battery] = drone.read_message("SYS_STATUS", "voltage_battery")
     print("\nPREFLIGHT voltage_battery: {}".format(voltage_battery))
@@ -67,7 +67,7 @@ def arm():
     raspi.output('[OK] Armed succesfully')
     raspi.set_wifi("down")
     countdown(2)
-    from uploaded_scripts.catch_ashes import catch_ashes
+    from uploaded_scripts.catch_ashes2 import catch_ashes
     catch_ashes()
     return "Nothing"
     
@@ -88,8 +88,9 @@ def disarm():
 if __name__ == '__main__':
     drone = Vehicle()
     raspi = CompanionComputer()
-    drone.output("[INFO] Waiting to connect to autopilot...")
-    drone.connect('/dev/ttyAMA1', 57600)
+    raspi.output("[INFO] Waiting to connect to autopilot...")
+    #drone.connect('/dev/ttyAMA1', 57600)
+    drone.connect('/dev/ttyAMA0', 57600)
     raspi.output("[OK] Connected")
     drone.request_all_msgs(4)
     app.run(debug=True, host='0.0.0.0')

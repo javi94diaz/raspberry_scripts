@@ -42,15 +42,14 @@ class State:
 
 
 
-def catch_ashes(drone, raspi):
+def catch_ashes():
 
-    # Comment when called from Demo7. Uncomment when called from Webapp
-    # drone = Vehicle()
-    # raspi = CompanionComputer()
+    drone = Vehicle()
+    raspi = CompanionComputer()
 
-    # raspi.output("Waiting to connect...")
-    # drone.connect('/dev/ttyAMA1', 57600)
-    # raspi.output("[OK] Connected")
+    raspi.output("Waiting to connect...")
+    drone.connect('/dev/ttyAMA0', 921600)
+    raspi.output("[OK] Connected")
 
     drone.request_all_msgs(4)
 
