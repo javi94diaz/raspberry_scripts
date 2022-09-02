@@ -193,8 +193,6 @@ class Vehicle:
             Mode set to: 'LOITER'
         '''
 
-        #print("Current mode: " + self.get_mode())
-
         mode = mode.upper()
         
         # Check if given mode is valid
@@ -202,15 +200,15 @@ class Vehicle:
         #     print('Unknown mode : {}'.format(mode))
         #     sys.exit(1)
 
-        print("Current mode list: ")
-        print(self.master.mode_mapping())
+        #print("Current mode list: ")
+        #print(self.master.mode_mapping())
 
         if mode not in self.master.mode_mapping():
             print('Unknown mode : {}'.format(mode))
             print('Try:', list(self.master.mode_mapping().keys()))
             sys.exit(1)
 
-        # Get mode ID
+        # Get mode number ID
         mode_id = self.master.mode_mapping()[mode]
 
         # Set new mode
@@ -332,7 +330,9 @@ class Vehicle:
 
 
     def request_logs(self):
-
+        '''
+        TODO: Write description
+        '''
         self.master.mav.command_long_send(
         self.master.target_system, 
         self.master.target_component,
@@ -378,7 +378,6 @@ class Vehicle:
             freq, 1)
 
 
-    # Methods to handle different types of messages
     def handle_heartbeat(self, msg, req_properties):
         '''
         Read three fields of the heartbeat messages to display them
@@ -392,7 +391,7 @@ class Vehicle:
             Enabled?: 0
         '''
 
-        print("//We are in handle_heartbeat")
+        print("*** We are in handle_heartbeat ***")
         pprint.pprint(req_properties)
 
         mode = mavutil.mode_string_v10(msg)
@@ -407,175 +406,7 @@ class Vehicle:
             ret.append( eval(prop) )
 
         return ret
-
-
-    def handle_rc_channels(self, msg, req_properties):
-        '''
-        Read RC channels 1 to 18 values and display them
-        Example:
-            handle_rc_channels(msg)
-
-        Output:
-            Message RC_CHANNELS
-            chanl_raw: 0.00
-            chan2 raw: 0.00
-            chan3 raw: 0.00
-            chan4 raw: 0.00
-            chan5_raw: 0.00
-            chan6_raw: 0.00
-            chan7_raw: 0.00
-            chan8_raw: 0.00 
-            chan9 raw: 0.00
-            chan10_raw: 0.00
-            chanll raw: 0.00
-            chan12 raw: 0.00
-            chan13 raw: 0.00
-            chan14 raw: 0.00
-            chan15 raw: 0.00
-            chan16 raw: 0.00
-            chan17 raw: 0.00
-            chan18_raw: 0.00
-        '''
-
-        print("//We are in handle_rc_channels")
-        pprint.pprint(req_properties)
-
-        channels = (msg.chan1_raw, msg.chan2_raw, msg.chan3_raw, msg.chan4_raw, 
-                msg.chan5_raw, msg.chan6_raw, msg.chan7_raw, msg.chan8_raw,
-                msg.chan9_raw, msg.chan10_raw, msg.chan11_raw, msg.chan12_raw, 
-                msg.chan13_raw, msg.chan14_raw, msg.chan15_raw, msg.chan16_raw, 
-                msg.chan17_raw, msg.chan18_raw)
-        
-        the_keys = msg.to_dict().keys()
-        r = re.compile("^chan[0-2]*[0-9]_raw$") # regex for channels up to 18
-        #r = re.compile("^chan[1-8]{1}_raw$") # regex for channels 1-8
-        new_keys = list(filter(r.match, the_keys))
-
-        for i in range(0, len(channels)):
-            print("{}: {:0.2f}".format(new_keys[i], channels[i]))
-
-        ret = []
-        for prop in req_properties:
-            ret.append( eval("msg." + prop) )
-
-        return ret
-        
-
-    def handle_hud(self, msg, req_properties):
-        '''
-        Read airspeed, groundspeed, heading, throttle, altitude and climb
-        from a HUD message and display them
-        Example:
-            handle_hud(msg)
-        
-        Output:
-            Message VFR_HUD
-            Airspeed: 0.00
-            GroundSpeed: 0.01
-            Heading: 279.00
-            Throttle: 0.00
-            Alt: 0.00
-            Climb: -0.01
-        '''
-
-        hud_data = (msg.airspeed, msg.groundspeed, msg.heading, 
-                    msg.throttle, msg.alt, msg.climb)
-        hud_vars = ("Airspeed", "GroundSpeed", "Heading", "Throttle", "Alt", "Climb")
-        
-        for i in range(0, len(hud_data)):
-            print("{}: {:0.2f}".format(hud_vars[i], hud_data[i]))
-
-
-        ret = []
-        for prop in req_properties:
-            ret.append( eval("msg." + prop) )
-
-        return ret
-
-
-    def handle_attitude(self, msg, req_properties):
-        '''
-        Read roll, pitch, yaw and its variation speeds: rollspeed, pitchspeed, yawspeed to display them
-        Example:
-            handle_attitude(msg)
-
-        Output:
-            Message ATTITUDE
-            Roll: -0.01
-            Pitch: -0.12
-            Yaw: -1.16
-            RollSpeed: -0.00
-            PitchSpeed: -0.00
-            YawSpeed: 0.00
-        '''
-
-        attitude_data = (msg.roll, msg.pitch, msg.yaw, msg.rollspeed, 
-                    msg.pitchspeed, msg.yawspeed)
-        attitude_vars = ("Roll", "Pitch", "Yaw", "RollSpeed", "PitchSpeed", "YawSpeed")
-
-        for i in range(0, len(attitude_data)):
-            print("{}: {:0.2f}".format(attitude_vars[i], attitude_data[i]))
-        
-        ret = []
-        for prop in req_properties:
-            ret.append( eval("msg." + prop) )
-
-        return ret
-
-
-    def handle_sys_status(self, msg, req_properties):
-        '''
-        Read important fields of the system status: battery voltage, battery remaining, current battery and load to display them
-        Example:
-            handle_sys_status(msg)
-
-        Output:
-            Message SYS_STATUS
-            Battery remaining: -1.00
-            Current battery: -1.00
-            Load: 500.00
-            Voltage battery: 0.00
-
-        '''
-        sys_status_data = (msg.battery_remaining, msg.current_battery, msg.load, msg.voltage_battery)
-        sys_status_vars = ("Battery remaining", "Current battery", "Load", "Voltage battery")
-        
-        for i in range(0, len(sys_status_data)):
-            print("{}: {:0.2f}".format(sys_status_vars[i], sys_status_data[i]))
-
-        ret = []
-        for prop in req_properties:
-            ret.append( eval("msg." + prop) )
-
-        return ret
-
-
-    def handle_global_position_int(self, msg, req_properties):
-        '''
-        Read alt, lat and lon and hdg from GPS positioning
-        Example
-            handle_global_position_int(msg)
-
-        Output:
-            Message SYS_STATUS
-            Battery remaining: -1.00
-            Current battery: -1.00
-            Load: 500.00
-            Voltage battery: 0.00
-
-        '''
-        global_position_data = (msg.alt, msg.hdg, msg.lat, msg.lon)
-        global_position_vars = ("Altitude", "Heading", "Latitude", "Longitude")
-        
-        for i in range(0, len(global_position_data)):
-            print("{}: {:0.2f}".format(global_position_vars[i], global_position_data[i]))
-       
-        ret = []
-        for prop in req_properties:
-            ret.append( eval("msg." + prop) )
-
-        return ret
-
+    
 
     def read_message(self, req_type, *req_properties): 
         
@@ -596,21 +427,6 @@ class Vehicle:
                         sys.stdout.write(msg.data)
                         sys.stdout.flush()
 
-                # elif msg_type == "RC_CHANNELS" and req_type == "RC_CHANNELS":
-                #     return self.handle_rc_channels(msg, req_properties)
-                    
-                # elif msg_type == "VFR_HUD" and req_type == "VFR_HUD":
-                #     return self.handle_hud(msg, req_properties)
-
-                # elif msg_type == "ATTITUDE" and req_type == "ATTITUDE":
-                #     return self.handle_attitude(msg, req_properties)
-
-                # elif msg_type == "SYS_STATUS" and req_type == "SYS_STATUS":
-                #     return self.handle_sys_status(msg, req_properties)
-
-                # elif msg_type == "GLOBAL_POSITION_INT" and req_type == "GLOBAL_POSITION_INT":
-                #     return self.handle_global_position_int(msg, req_properties)
-                
                 elif msg_type == req_type:
 
                     if msg_type == "HEARTBEAT" and req_type == "HEARTBEAT":
@@ -628,20 +444,12 @@ class Vehicle:
 
             #print("\n*****************")
             time.sleep(0.1)
-                
-            
-
-            
-
-
-                
-
-
+   
 
     def read_all_messages(self): 
         '''
         Read all messages from mavlink stream
-        Uses an especific handler method for each type of message
+        Blocking method
         Example:
             drone = Vehicle()
             # ... connect to the vehicle
@@ -718,6 +526,7 @@ class CompanionComputer:
         print(msg)
         self.log_file.write(msg + "\n")
 
+
     def set_wifi(self, command):
         '''
         Turns ON/OFF the Wi-Fi network in a Linux companion computer
@@ -741,6 +550,7 @@ class CompanionComputer:
         else:
             print("Command not valid (must be 'up' or 'down')")
 
+
     def check_wifi(self):
         '''
         Check if Wi-Fi internet is set up or not with a shell command
@@ -762,6 +572,7 @@ class CompanionComputer:
             self.output("[INFO] Wi-Fi Up")
             return True
 
+
     def check_internet(self, url):
         '''
         Check if internet connection is available opening a given url
@@ -781,6 +592,7 @@ class CompanionComputer:
             print(exc)
             self.output("[INFO] Internet not available")
             return False
+
 
 # Get mode and set mode
 def demo1(drone, raspi):
@@ -837,6 +649,7 @@ def demo4(drone, raspi):
     drone.request_all_msgs(4)
     drone.read_all_messages()
 
+
 # Request certain properties of message of the desired type
 def demo5(drone, raspi):
 
@@ -853,6 +666,7 @@ def demo5(drone, raspi):
     print( drone.read_message("SYS_STATUS", "battery_remaining", "current_battery") )
     countdown(2)
 
+# Get some specific messages from the data stream
 def demo6(drone, raspi):
 
     raspi.output("[INFO] Demo 6 - get specific messages")
@@ -872,10 +686,14 @@ def demo6(drone, raspi):
         
         time.sleep(1)
 
+
+# Run catch_ashes uploaded script
 def demo7(drone, raspi):
 
+    raspi.output("[INFO] Demo 7 - call catch_ashes")
     from uploaded_scripts.catch_ashes import catch_ashes
     catch_ashes(drone, raspi)
+
 
 def main():
     print("Main function " + get_datetime())
@@ -893,6 +711,7 @@ def main():
     print("Demo number?: ")
     print("1: Get/Set mode\n2: Move servo\n3: Arm/Disarm, Wi-Fi On/Off")
     print("4: read messages\n5: request properties\n6: read specific messages")
+    print("7 - call catch_ashes")
     n = input()
     eval("demo" + n + "(drone, raspi)")
 

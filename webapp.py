@@ -6,12 +6,7 @@ from javikit import *
 app = Flask (__name__)
 cors = CORS(app)
 
-
-# @app.route('/')
-# def index():
-#     return render_template('index.html')
-
-
+# Main page
 @app.route('/', methods= ['GET', 'POST'])
 def get_message():
     # if request.method == "GET":
@@ -19,32 +14,8 @@ def get_message():
     return render_template("index.html")
 
 
-@app.route('/upload_static_file', methods=['POST'])
-def upload_static_file():
-    print("Got request in static files")
-    print(request.files)
-    f = request.files['static_file']
-    f.save("uploaded_scripts/" + f.filename)
-    resp = {"success": True, "response": "file saved!"}
-    return jsonify(resp), 200
-
-
-@app.route('/request_data')
-def patata():
-    print("request_data")
-    response = send_from_directory(directory='saved_data', filename='data.json')
-    return response
-
-
 @app.route('/pre_flight_checks')
 def pre_flight_checks():
-
-    ## From the checklist
-    # battery level
-    # connection with GCS
-    # telemetry link
-    # airspeed
-    # servo check, arm servos (for surfaces), check controls 
 
     print("pre flight checks button pressed")
     print("Current mode: " + drone.get_mode())
@@ -63,15 +34,14 @@ def pre_flight_checks():
 
 @app.route('/arm')
 def arm():
-    drone.arm()
-    raspi.output('[OK] Armed succesfully')
-    raspi.set_wifi("down")
-    countdown(2)
-    from uploaded_scripts.catch_ashes2 import catch_ashes
-    catch_ashes()
+    #drone.arm()
+   # raspi.output('[OK] Armed succesfully')
+    #raspi.set_wifi("down")
+    #countdown(2)
+    from uploaded_scripts.catch_ashes import catch_ashes
+    catch_ashes(drone, raspi)
     return "Nothing"
     
-
 
 @app.route('/disarm')
 def disarm():
@@ -83,6 +53,22 @@ def disarm():
     raspi.check_wifi()
     return "Nothing"
 
+
+@app.route('/upload_static_file', methods=['POST'])
+def upload_static_file():
+    print("Got request in static files")
+    print(request.files)
+    f = request.files['static_file']
+    f.save("uploaded_scripts/" + f.filename)
+    resp = {"success": True, "response": "file saved!"}
+    return jsonify(resp), 200
+
+
+@app.route('/request_data')
+def patata():
+    print("request_data")
+    response = send_from_directory(directory='saved_data', filename='data.json')
+    return response
 
 
 if __name__ == '__main__':

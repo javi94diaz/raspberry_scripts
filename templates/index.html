@@ -2,7 +2,7 @@
 <html>
 <head>
 
-    <title>Flight checks website</title>
+    <title>Bristol Flight Lab</title>
     <meta charset="UTF-8">  
     <link rel="stylesheet" type="text/css" href="../static/main.css">
    
@@ -14,7 +14,6 @@
 
     <!-- PRE-FLIGHT CHECKS BUTTON ACTION -->
     <script type=text/javascript> 
-        
         $(function () {
             $("#pre_flight_button").click(function (event) {
                 $.getJSON('/pre_flight_checks',
@@ -25,12 +24,10 @@
                 return false;
             });
         }); 
-
     </script> 
 
     <!-- ARM BUTTON ACTION -->
     <script type=text/javascript> 
-        
         $(function() {
             $("#arm_button").click(function (event) {
                 $.getJSON('/arm',
@@ -41,12 +38,10 @@
                 return false;
             });
         }); 
-    
     </script> 
 
     <!-- DISARM BUTTON ACTION -->
     <script type=text/javascript>
-        
         $(function() {
             $('a#disarm_button').on('click', function(e) {
                 e.preventDefault()
@@ -57,7 +52,52 @@
                 return false;
             });
         });
-        
+    </script>
+
+    <!-- UPLOAD A SCRIPT ACTION -->  
+    <script type="text/javascript">
+        function uploadFile(form)
+        {
+        const formData = new FormData(form);
+        var oOutput = document.getElementById("static_file_response")
+        var oReq = new XMLHttpRequest();
+            oReq.open("POST", "upload_static_file", true);
+        oReq.onload = function(oEvent) {
+            if (oReq.status == 200) {
+            oOutput.innerHTML = "Uploaded!";
+            console.log(oReq.response)
+            } else {
+            oOutput.innerHTML = "Error occurred when trying to upload your file.<br \/>";
+            }
+            };
+        oOutput.innerHTML = "Sending file!";
+        console.log("Sending file!")
+        oReq.send(formData);
+        }
+    </script>
+
+    <!-- REQUEST FILE ACTION -->  
+    <script>
+        function requestFile()
+        {
+            const xhttp = new XMLHttpRequest();
+            xhttp.onload = function() {
+                if (xhttp.status == 200) {
+                    //console.log(xhttp.response)
+                    var datos = xhttp.response
+                    console.log("Printed data")
+                    console.log(datos.xValues)           
+
+                } else {
+                    console.log("Error occurred");
+                }
+            };
+            console.log("Requesting file!")
+            xhttp.open("GET", "/request_data", true);
+            xhttp.send();
+
+            //console.log(xhttp.response)
+        }
     </script>
 
 </head>
@@ -90,27 +130,7 @@
             </form>
     </div>
 
-    <!-- Upload a file script action -->  
-    <script type="text/javascript">
-        function uploadFile(form)
-        {
-        const formData = new FormData(form);
-        var oOutput = document.getElementById("static_file_response")
-        var oReq = new XMLHttpRequest();
-            oReq.open("POST", "upload_static_file", true);
-        oReq.onload = function(oEvent) {
-            if (oReq.status == 200) {
-            oOutput.innerHTML = "Uploaded!";
-            console.log(oReq.response)
-            } else {
-            oOutput.innerHTML = "Error occurred when trying to upload your file.<br \/>";
-            }
-            };
-        oOutput.innerHTML = "Sending file!";
-        console.log("Sending file!")
-        oReq.send(formData);
-        }
-    </script>
+
 
     <!-- Upload a file button -->
     <div type="container">
@@ -136,11 +156,7 @@
 
     <!-- Chart functionality script -->
     <script>
-        
-    //var mydata = JSON.parse('{"1": 1, "2": 2,"3": {"4": 4, "5": {"6": 6}}}');
-    //console.log(mydata)
- 
-
+    
     var c = document.getElementById("myChart");
     var ctx = c.getContext("2d");
     var xValues = [50,60,70,80,90,100,110,120,130,140,150];

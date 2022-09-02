@@ -1044,3 +1044,11 @@ Waiting to connect...
 [INFO] climb: -0.0
 [INFO] alt: 0.8799999952316284
 [INFO] groundspeed: 0.0
+
+*** LOGFILE: log.txt - 02/09/22 11:24:40 ***
+[INFO] Waiting to connect to autopilot...
+[OK] Connected
+
+*** LOGFILE: log.txt - 02/09/22 11:27:44 ***
+[INFO] Waiting to connect to autopilot...
+[OK] Connected
