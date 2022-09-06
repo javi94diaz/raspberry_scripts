@@ -51,7 +51,7 @@ def pre_flight_checks():
     check5 = False
 
     # LiPo battery (3S) -> Voltage between 9V and 12.6V. Nominal = 11.1V
-    if voltage_battery >= 10100 and voltage_battery <= 12600:
+    if voltage_battery >= 11100 and voltage_battery <= 12600:
         raspi.output("[OK] Preflight voltage_battery correct")
         check1 = True
     else:
@@ -82,7 +82,7 @@ def pre_flight_checks():
     else:
         raspi.output("[ERROR] Preflight satellites_visible incorrect")
     
-    check1 = True # DELETE THIS AFTER TEST
+    #check1 = True # DELETE THIS AFTER TEST
 
     if check1 and check2 and check3 and check4 and check5:
         raspi.output("[OK] All pre-flight checks correct")
