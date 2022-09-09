@@ -1,8 +1,8 @@
 
-# Script to be uploaded, and executed in the RasPi when flying
-# Uses API javikit.py to read messages from the autopilot, 
-# check the battery level, the mode and the GPS location.
-# With that information, moves through the states of a state machine
+# Script to be uploaded, and executed in the Raspberry Pi when flying
+# Uses the API javikit.py to read messages from the autopilot, 
+# check the battery level, the attitude, etc.
+# With that information, evolves through the states of a state machine
 # (changes the flight mode or moves a servo when needed)
 
 import os
@@ -18,6 +18,9 @@ class State:
     '''
     Represent one situation of the drone depending on the value 
     of several signals onboard
+
+    The servo represents the ash catching system in the aircraft
+    being deployed of folded depending on the situation
     '''
     def __init__(self, name, vehicle, new_mode, servo_n, servo_pos):
         pass
@@ -33,18 +36,25 @@ class State:
 
 
 def catch_ashes(drone, raspi):
+    '''
+    Contains the state machine and the transition between states
+    Saves the data in a JSON file
+    '''
 
     drone.request_all_msgs(4)
 
-    state1 = State("NORMAL", drone, "AUTO", 10, 1100)
-    state3 = State("CATCH_ASH", drone, "AUTO", 10, 1900)
-    state2 = State("LOW_BATTERY", drone, "RTL", 10, 1500)
-    curr_state = state1
+    # Create the states
+    normal_state = State("NORMAL", drone, "AUTO", 10, 1100)
+    low_battery_state = State("LOW_BATTERY", drone, "RTL", 10, 1500)
+    catch_ash_state = State("CATCH_ASH", drone, "LOITER", 10, 1900)
+    
+    # Set NORMAL as initial state
+    curr_state = normal_state
     curr_state.update()
     print("Initial state: " + curr_state.name)
-
     countdown(2)
 
+    # Dictionary to save the values
     data = {
         'xValues': list(range(1,11)),
         'voltage_battery': [],
@@ -58,7 +68,7 @@ def catch_ashes(drone, raspi):
         'yaw': []
     }
 
-    end = 10
+    end = 10 # Number of iterations
     for i in range(0, end):
         
         print("///////////////////////")
@@ -95,22 +105,24 @@ def catch_ashes(drone, raspi):
 
         curr_countdown = 7 - i
 
-        if i == end/2:
-            curr_voltage = -401
+        # Force a change to LOW_BATTERY
+        #if i == end/2:
+        #    curr_voltage = -401
 
         # Determine current state
+        nom_voltage = 11100 # millivolts
         print("Current state: " + curr_state.name)
-
-        if curr_voltage <= -400 and curr_state.name != "LOW_BATTERY":
-            curr_state = state2
+        
+        if curr_voltage <= nom_voltage and curr_state.name != "LOW_BATTERY":
+            curr_state = low_battery_state
             curr_state.update()
 
         elif curr_yaw <= 300 and curr_state.name == "NORMAL":
-            curr_state = state3
+            curr_state = catch_ash_state
             curr_state.update()
 
         elif curr_countdown == 0 and curr_state.name == "CATCH_ASH":
-            curr_state = state1
+            curr_state = normal_state
             curr_state.update()
 
         print("New state: " + curr_state.name)
@@ -132,28 +144,34 @@ if __name__ == '__main__':
     drone = Vehicle()
     raspi = CompanionComputer()
     raspi.output("[INFO] Waiting to connect to autopilot...")
-    drone.connect('/dev/ttyAMA0', 57600)
+
+    # Adapt these values depending on the serial port
+    connection_string = '/dev/ttyAMA0' 
+    baud_rate = 57600
+
+    drone.connect(connection_string, baud_rate)
     raspi.output("[OK] Connected")
     catch_ashes(drone, raspi)
+
 
 
 # State 1: Normal
     # Battery > half of the battery
     # Mode: Auto
-    # Servo: MIN position
+    # Servo: MIN position = 1100
 
     # Action: put servo to MIN position. Change mode to AUTO.
 
 # State 2: Low battery
     # Battery < half of the battery
     # Mode: RTL
-    # Servo: MIN position
+    # Servo: TRIM position = 1500
 
-    # Action: changes mode to RTL and puts servo to MIN position.
+    # Action: changes mode to RTL and puts servo to TRIM position.
 
 # State 3: Catch ashes
     # Battery > half of the battery
-    # Mode: Auto (or Stabilize, see more modes in documentation)
+    # Mode: Loiter (or Stabilize, see more modes in documentation)
     # Servo: MAX position during 10 seconds
 
     # Action: moves servo to MAX position during 10 seconds, 

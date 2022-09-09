@@ -1,7 +1,7 @@
-''' ******************************************************************
-    JAVIKIT v1.0
+''' ***********************************************************************
+    bristol_API
     Python API for easy use of pymavlink library from a companion computer
-****************************************************************** '''
+*********************************************************************** '''
 
 import os
 import re
@@ -10,17 +10,17 @@ import time
 import pprint
 import datetime
 import subprocess
-from urllib.request import urlopen, URLError
+from urllib.request import urlopen
 from pymavlink import mavutil
 
 
 def countdown(seconds):
     '''
     Show a countdown of given seconds onscreen
-    Example
+    Example:
         countdown(3)
 
-    Output
+    Output:
         Count 1
         Count 2
         Count 3
@@ -34,12 +34,12 @@ def countdown(seconds):
 
 def get_datetime():
     '''
-    Returns an string with current date and time
+    Returns a string with current date and time
     using dd/mm/yy hh:mm:ss format
     Example:
         print(get_datetime())
     
-    Output
+    Output:
         08/17/22 09:47:16
 
     '''
@@ -52,8 +52,8 @@ class Vehicle:
     Represents a connection with the autopilot via MAVlink.
     Provides methods to receive and send information to the 
     autopilot (messages, flightmode, arming and more).
+    
     '''
-
     modelist_copter = [
         'STABILIZE', 'ACRO', 'ALT_HOLD', 'AUTO', 
         'GUIDED', 'LOITER', 'RTL', 'CIRCLE', 
@@ -102,13 +102,12 @@ class Vehicle:
         'LOITERALTQLAND': 25
     }
 
-    
 
     def __init__(self):
         self.mode = "default"
         self.master = None
 
-    #connection_string='/dev/ttyAMA0', baudrate=921600
+
     def connect(self, connection_string, baudrate=57600):
         '''
         Connect to the autopilot
@@ -121,6 +120,7 @@ class Vehicle:
         Output:
             Waiting to connect...
             [OK] Connected
+
         '''
         try:
 
@@ -142,6 +142,7 @@ class Vehicle:
 
         Output:
             (none)
+
         '''
         self.master.mav.heartbeat_send(
             mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
@@ -157,12 +158,15 @@ class Vehicle:
         Example:
             drone = Vehicle()
             # ... connect to the vehicle
+            drone.set_mode('AUTO')
+
+            # Check if the mode was succesfully updated
             drone.get_mode()
 
         Output:
-            Current mode: 'STABILIZE'
+            Current mode: 'AUTO'
+        
         '''
-
         mode_num = 0
         for i in range(0, 2):
             try:
@@ -191,14 +195,9 @@ class Vehicle:
         Output:
             Current mode: 'STABILIZE'
             Mode set to: 'LOITER'
-        '''
-
-        mode = mode.upper()
         
-        # Check if given mode is valid
-        # if mode not in self.modelist_plane:
-        #     print('Unknown mode : {}'.format(mode))
-        #     sys.exit(1)
+        '''
+        mode = mode.upper()
 
         #print("Current mode list: ")
         #print(self.master.mode_mapping())
@@ -277,6 +276,7 @@ class Vehicle:
         Output:
             Waiting for the vehicle to disarm...
             [OK] Disarmed succesfully
+        
         '''
         try:
             self.master.mav.command_long_send(
@@ -308,8 +308,8 @@ class Vehicle:
         
         Output:
             (the servo moves to desired position)
+        
         '''
-
         try:
 
             self.master.mav.command_long_send(
@@ -331,7 +331,13 @@ class Vehicle:
 
     def request_logs(self):
         '''
-        TODO: Write description
+        Request the log list from the autopilot
+        Example:
+            (NOT TESTED)
+
+        Output:
+            (UNKNOWN)
+
         '''
         self.master.mav.command_long_send(
         self.master.target_system, 
@@ -369,8 +375,8 @@ class Vehicle:
         
         Output:
             (none)
+        
         '''
-
         self.master.mav.request_data_stream_send(
             self.master.target_system, 
             self.master.target_component, 
@@ -386,11 +392,11 @@ class Vehicle:
 
         Output:
             Message HEARTBEAT
-            Mode: Mode(0x00000000)
+            Mode: RTL
             Armed?: 0
             Enabled?: 0
+        
         '''
-
         print("*** We are in handle_heartbeat ***")
         pprint.pprint(req_properties)
 
@@ -409,7 +415,18 @@ class Vehicle:
     
 
     def read_message(self, req_type, *req_properties): 
+        '''
+        Listen to the last message of the type indicated.
+        It is also possible to request some specific properties
+        inside that message
         
+        Example:
+            [airspeed, alt, groundspeed] = drone.read_message("VFR_HUD", "airspeed", "alt", "groundspeed")
+        
+        Output:
+            (The variables airspeed, alt and groundspeed contain the values read)
+        
+        '''
         #pprint.pprint(req_properties)
 
         while(True):
@@ -455,10 +472,10 @@ class Vehicle:
             # ... connect to the vehicle
             drone.read_all_messages()
 
-        Output
+        Output:
             (The message with all its fields is printed. The output varies depending on the type of message)
+        
         '''
-
         while(True):
             
             msg = self.master.recv_match(blocking=False)
@@ -483,10 +500,12 @@ class CompanionComputer:
     '''
     Represents a companion computer, such as a Raspberry Pi.
     It wraps some methods to log information an manage wlan interface
+    
     '''
 
     def __init__(self):
         self.log_file = self.open_logfile("log")
+
 
     def open_logfile(self, filename):
         ''' 
@@ -510,6 +529,7 @@ class CompanionComputer:
         curr_time = datetime.datetime.now()
         log_file.write("\n*** LOGFILE: " + file_name + " - " + curr_time.strftime("%d/%m/%y %X") + " ***\n")
         return log_file
+
 
     def output(self, msg):
         '''
@@ -594,7 +614,7 @@ class CompanionComputer:
             return False
 
 
-# Get mode and set mode
+# Get and set mode
 def demo1(drone, raspi):
 
     raspi.output("[INFO] Demo 1 - get/set mode")
@@ -606,6 +626,7 @@ def demo1(drone, raspi):
     drone.set_mode(newmode)
     raspi.output("[OK] Mode set to " + newmode)
 
+
 # Move servo
 def demo2(drone, raspi):
     raspi.output("[INFO] Demo 2 - move servo")
@@ -614,10 +635,6 @@ def demo2(drone, raspi):
     pos = int(input("Introduce the servo position: "))
     drone.move_servo(num, pos)
     raspi.output("[OK] Servo position set")
-
-    #ACTUATOR_OUTPUT_FUNCTION_SERVO6
-
-    #MAV_CMD_DO_SET_ACTUATOR 
 
 
 # Arm, turn Wi-Fi off, wait, disarm, turn Wi-Fi on
@@ -636,8 +653,8 @@ def demo3(drone, raspi):
     drone.disarm()
     raspi.set_wifi("up")
 
-    # Give 7 seconds to reconnect to a Wi-Fi network
-    countdown(7)
+    # Give 6 seconds to connect to a Wi-Fi network
+    countdown(6)
  
     #raspi.check_internet('https://bing.com')
     raspi.check_wifi()
@@ -665,6 +682,7 @@ def demo5(drone, raspi):
     countdown(2)
     print( drone.read_message("SYS_STATUS", "battery_remaining", "current_battery") )
     countdown(2)
+
 
 # Get some specific messages from the data stream
 def demo6(drone, raspi):
@@ -702,18 +720,16 @@ def main():
     
     raspi.output("Waiting to connect...")
 
-    # Over USB cable
-    #drone.connect('/dev/ttyAMA0', 921600)
-
-    # Over telemetry
     drone.connect('/dev/ttyAMA0', 57600)
-        
+    
     print("Demo number?: ")
     print("1: Get/Set mode\n2: Move servo\n3: Arm/Disarm, Wi-Fi On/Off")
     print("4: read messages\n5: request properties\n6: read specific messages")
-    print("7 - call catch_ashes")
+    print("7: call catch_ashes example")
+    
     n = input()
     eval("demo" + n + "(drone, raspi)")
+
 
 if __name__ == '__main__':
 	main()
